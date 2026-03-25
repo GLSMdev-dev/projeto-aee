@@ -1,9 +1,9 @@
-name: Deploy Interface to GitHub Pages
+name: Deploy Dev to GitHub Pages
 
 on:
   push:
     branches:
-      - develop/interface-style
+      - develop/novas-features
   workflow_dispatch:
 
 permissions:
@@ -33,7 +33,8 @@ jobs:
           API_KEY: ${{ secrets.API_KEY }}
           PUBLIC_URL: ${{ secrets.PUBLIC_URL }}
         run: |
-          echo "🔧 Gerando config.js..."
+          echo "🔧 Gerando config.js para ambiente DEV..."
+          
           cat js/config-template.js | \
             sed "s|{{API_URL}}|${API_URL}|g" | \
             sed "s|{{DEPLOYMENT_ID}}|${DEPLOYMENT_ID}|g" | \
@@ -41,7 +42,10 @@ jobs:
             sed "s|{{API_KEY}}|${API_KEY}|g" | \
             sed "s|{{PUBLIC_URL}}|${PUBLIC_URL}|g" \
             > js/config.js
-          echo "✅ config.js gerado"
+          
+          echo "✅ config.js gerado (ambiente DEV)"
+          echo "=== Primeiras linhas ==="
+          head -5 js/config.js
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
