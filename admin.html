@@ -85,7 +85,7 @@
     async function excluirEstudante(t){if(confirm('Excluir estudante?')){await deletarEstudante(t);carregarEstudantes()}}
     function editarUsuario(t){window.location.href=`usuario.html?id=${t}`}
     async function excluirUsuario(t){if(confirm('Excluir usuário?')){await deletarUser(t);carregarUsuarios()}}
-    function verPEI(t,e){window.location.href=`visualizar-pei.html?peiId=${t}&estudanteId=${e}`}
+    function verPEI(t,e){if(!e){console.error('estudanteId inválido');return}window.location.href=`visualizar-pei.html?peiId=${t}&estudanteId=${e}`}
     async function excluirPEI(t){if(confirm('Excluir PEI?')){await deletarPEI(t);carregarPEIs()}}
     async function alterarStatusPEI(t,e){await atualizarPEI(t,{status:e});carregarPEIs();mostrarMensagem(`Status alterado para ${e}`,'success')}
     
