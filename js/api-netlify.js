@@ -146,6 +146,7 @@ async function listarPEIs(estudanteId = null) {
 }
 
 async function criarPEI(pei) {
+  console.log('criarPEI recebido:', pei);
   mostrarLoading(true);
   try {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -154,9 +155,11 @@ async function criarPEI(pei) {
     }
     pei.status = 'ativo';
     const resultado = await chamarAppsScript('criar', 'pei', pei);
+    console.log('Resultado criarPEI:', resultado);
     mostrarMensagem('✅ PEI criado!', 'success');
     return resultado;
   } catch (error) {
+    console.error('❌ Erro ao criar PEI:', error);
     mostrarMensagem('❌ Erro ao criar PEI', 'error');
     throw error;
   } finally {
