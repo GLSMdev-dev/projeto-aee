@@ -10,7 +10,7 @@ const SHEETS_CONFIG = {
   apiKey: '{{API_KEY}}',
   publicUrl: '{{PUBLIC_URL}}',
   ranges: {
-    estudantes: 'estudantes!A:I',
+    estudantes: 'estudantes!A:J',
     peis: 'peis!A:J',
     users: 'users!A:G'
   }
