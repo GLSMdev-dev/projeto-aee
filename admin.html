@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema AEE - Administrador</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid var(--gray-200);
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .nav-tab {
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-weight: 500;
+      color: var(--gray-600);
+      transition: var(--transition);
+    }
+    .nav-tab.active {
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
+      margin-bottom: -2px;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .user-status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .status-active {
+      background: var(--success-light, #d4edda);
+      color: var(--success-dark, #155724);
+    }
+    .status-inactive {
+      background: #f8d7da;
+      color: var(--danger-dark);
+    }
+    .perfil-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+    }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading"><div class="spinner"></div></div>
+
+  <nav class="navbar">
+    <h1>🏫 Sistema AEE - Administrador</h1>
+    <div class="nav-links">
+      <span style="color: white;">👤 <span id="userNome"></span></span>
+      <button id="btnLogout" class="btn btn-sm">Sair</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="estudantes">📚 Estudantes</button>
+        <button class="nav-tab" data-tab="peis">📋 PEIs</button>
+        <button class="nav-tab" data-tab="usuarios">👥 Usuários</button>
+      </div>
+
+      <!-- Aba Estudantes -->
+      <div id="tab-estudantes" class="tab-content active">
+        <div class="card-header">
+          <h2>Gerenciar Estudantes</h2>
+          <button id="btnNovoEstudante" class="btn btn-primary">➕ Novo Estudante</button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>Ações</th</tr>
+            </thead>
+            <tbody id="listaEstudantes"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Aba PEIs -->
+      <div id="tab-peis" class="tab-content">
+        <div class="card-header">
+          <h2>Planos Educacionais Individualizados</h2>
+          <div class="filters"><input type="text" id="filtroPEI" placeholder="Buscar por estudante..."></div>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th>Estudante</th><th>Data</th><th>Objetivos</th><th>Ações</th></tr></thead>
+            <tbody id="listaPEIs"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Aba Usuários -->
+      <div id="tab-usuarios" class="tab-content">
+        <div class="card-header">
+          <h2>Gerenciar Usuários</h2>
+          <button id="btnNovoUsuario" class="btn btn-primary">➕ Novo Usuário</button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th>Nome</th><th>E-mail</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="listaUsuarios"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmação -->
+  <div id="modalConfirmacao" class="modal"><div class="modal-content"><div class="modal-header"><h3>Confirmar</h3><button class="btn btn-sm" onclick="fecharModal()">✕</button></div><p id="confirmacaoMensagem"></p><div class="modal-footer"><button id="cancelarBtn" class="btn">Cancelar</button><button id="confirmarBtn" class="btn btn-danger">Confirmar</button></div></div></div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api-netlify.js"></script>
+  <script>
+    let currentUser = null;
+    let estudantes = [];
+    let peis = [];
+    let usuarios = [];
+
+    // Verificar autenticação
+    function verificarAuth() {
+      const user = localStorage.getItem('user');
+      if (!user) { window.location.href = 'login.html'; return null; }
+      const userObj = JSON.parse(user);
+      if (userObj.perfil !== 'adm') { window.location.href = 'login.html'; return null; }
+      document.getElementById('userNome').textContent = userObj.nome;
+      return userObj;
+    }
+
+    // Carregar dados
+    async function carregarEstudantes() { estudantes = await listarEstudantes(); renderizarEstudantes(); }
+    async function carregarPEIs() { peis = await listarPEIs(); renderizarPEIs(); }
+    async function carregarUsuarios() { usuarios = await listar('users'); renderizarUsuarios(); }
+
+    function renderizarEstudantes() {
+      const tbody = document.getElementById('listaEstudantes');
+      tbody.innerHTML = estudantes.map(e => `
+        <tr>
+          <td>${e.matricula || '-'}</td>
+          <td>${escapeHtml(e.nome)}</td>
+          <td>${e.anoEscolar || '-'}</td>
+          <td>${e.turno || '-'}</td>
+          <td>${e.deficiencia || '-'}</td>
+          <td>${e.CID || '-'}</td>
+          <td class="acoes">
+            <button class="btn btn-sm btn-secondary" onclick="editarEstudante(${e.id})">✏️</button>
+            <button class="btn btn-sm btn-danger" onclick="excluirEstudante(${e.id})">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderizarPEIs() {
+      const tbody = document.getElementById('listaPEIs');
+      const filtro = document.getElementById('filtroPEI')?.value.toLowerCase() || '';
+      const filtrados = peis.filter(p => p.nome_estudante?.toLowerCase().includes(filtro));
+      tbody.innerHTML = filtrados.map(p => `
+        <tr>
+          <td>${escapeHtml(p.nome_estudante || 'N/A')}</td>
+          <td>${formatarData(p.dataCriacao)}</td>
+          <td>${escapeHtml(p.objetivosGerais?.substring(0, 50) || '')}...</td>
+          <td class="acoes"><button class="btn btn-sm btn-warning" onclick="verPEI(${p.id}, ${p.estudanteId})">👁️ Ver</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderizarUsuarios() {
+      const tbody = document.getElementById('listaUsuarios');
+      tbody.innerHTML = usuarios.map(u => `
+        <tr>
+          <td>${escapeHtml(u.nome)}</td>
+          <td>${escapeHtml(u.email)}</td>
+          <td>${escapeHtml(u.username)}</td>
+          <td><span class="perfil-badge">${u.perfil}</span></td>
+          <td><span class="user-status-badge ${u.activityStatus === 'true' ? 'status-active' : 'status-inactive'}">${u.activityStatus === 'true' ? 'Ativo' : 'Inativo'}</span></td>
+          <td class="acoes">
+            <button class="btn btn-sm btn-secondary" onclick="editarUsuario(${u.id})">✏️</button>
+            <button class="btn btn-sm btn-danger" onclick="excluirUsuario(${u.id})">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Ações
+    function editarEstudante(id) { window.location.href = `estudante.html?id=${id}`; }
+    async function excluirEstudante(id) { if (confirm('Excluir estudante?')) { await deletarEstudante(id); carregarEstudantes(); } }
+    function editarUsuario(id) { window.location.href = `usuario.html?id=${id}`; }
+    async function excluirUsuario(id) { if (confirm('Excluir usuário?')) { await deletar('user', id); carregarUsuarios(); } }
+    function verPEI(peiId, estudanteId) { window.location.href = `visualizar-pei.html?peiId=${peiId}&estudanteId=${estudanteId}`; }
+
+    // Tabs
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+        if (tab.dataset.tab === 'estudantes') carregarEstudantes();
+        if (tab.dataset.tab === 'peis') carregarPEIs();
+        if (tab.dataset.tab === 'usuarios') carregarUsuarios();
+      });
+    });
+
+    document.getElementById('btnNovoEstudante').onclick = () => window.location.href = 'estudante.html';
+    document.getElementById('btnNovoUsuario').onclick = () => window.location.href = 'usuario.html';
+    document.getElementById('filtroPEI')?.addEventListener('input', () => renderizarPEIs());
+    document.getElementById('btnLogout').onclick = () => { localStorage.removeItem('user'); window.location.href = 'login.html'; };
+
+    // Inicialização
+    currentUser = verificarAuth();
+    if (currentUser) { carregarEstudantes(); carregarPEIs(); carregarUsuarios(); }
+  </script>
+</body>
+</html>
