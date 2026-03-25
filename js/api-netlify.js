@@ -6,10 +6,16 @@
 // FUNÇÕES DE COMUNICAÇÃO
 // ============================================
 
-async function chamarAppsScript(action, entity, dados = null, id = null) {
+async function chamarAppsScript(action, entity, dados = null, id = null, params = {}) {
   let url = `${API_URL}?action=${action}&entity=${entity}`;
   if (id) url += `&id=${id}`;
   if (dados) url += `&_data=${encodeURIComponent(JSON.stringify(dados))}`;
+  
+  // Adicionar parâmetros extras
+  for (const [key, value] of Object.entries(params)) {
+    if (value) url += `&${key}=${encodeURIComponent(value)}`;
+  }
+  
   url += `&_=${Date.now()}`;
   
   try {
@@ -109,25 +115,44 @@ async function deletarEstudante(id) {
 // ============================================
 
 async function listarPEIs(estudanteId = null) {
-  if (USAR_LEITURA_RAPIDA) {
-    let peis = await lerPlanilha(SHEETS_CONFIG.ranges.peis);
-    if (estudanteId) {
-      peis = peis.filter(p => p.estudanteId == estudanteId);
+  mostrarLoading(true);
+  try {
+    if (USAR_LEITURA_RAPIDA) {
+      let peis = await lerPlanilha(SHEETS_CONFIG.ranges.peis);
+      if (estudanteId) {
+        peis = peis.filter(p => p.estudanteId == estudanteId);
+      }
+      // Ordenar por data (mais recente primeiro)
+      peis.sort((a, b) => {
+        const dateA = a.dataCriacao ? new Date(a.dataCriacao.split(' ')[0].split('/').reverse().join('-')) : 0;
+        const dateB = b.dataCriacao ? new Date(b.dataCriacao.split(' ')[0].split('/').reverse().join('-')) : 0;
+        return dateB - dateA;
+      });
+      return peis;
+    } else {
+      const resultado = await chamarAppsScript('listar', 'peis');
+      let peis = resultado.dados || [];
+      if (estudanteId) {
+        peis = peis.filter(p => p.estudanteId == estudanteId);
+      }
+      return peis;
     }
-    return peis;
-  } else {
-    const resultado = await chamarAppsScript('listar', 'peis');
-    let peis = resultado.dados || [];
-    if (estudanteId) {
-      peis = peis.filter(p => p.estudanteId == estudanteId);
-    }
-    return peis;
+  } catch (error) {
+    console.error('Erro:', error);
+    return [];
+  } finally {
+    mostrarLoading(false);
   }
 }
 
 async function criarPEI(pei) {
   mostrarLoading(true);
   try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      pei.professorId = user.id;
+    }
+    pei.status = 'ativo';
     const resultado = await chamarAppsScript('criar', 'pei', pei);
     mostrarMensagem('✅ PEI criado!', 'success');
     return resultado;
@@ -171,12 +196,14 @@ async function deletarPEI(id) {
 // CRUD USUÁRIOS
 // ============================================
 
-async function listar(entity) {
-  if (entity === 'users') {
-    const resultado = await chamarAppsScript('listar', 'users');
-    return resultado.dados || [];
-  }
-  return [];
+async function listarUsers() {
+  const resultado = await chamarAppsScript('listar', 'users');
+  return resultado.dados || [];
+}
+
+async function listarProfessores() {
+  const users = await listarUsers();
+  return users.filter(u => u.perfil === 'professor' && u.activityStatus === 'true');
 }
 
 async function criarUser(user) {
@@ -242,19 +269,6 @@ async function verificarConexao() {
   } catch (error) {
     return false;
   }
-}
-// ============================================
-// FUNÇÕES ESPECÍFICAS PARA USUÁRIOS
-// ============================================
-
-async function listarUsers() {
-  const resultado = await chamarAppsScript('listar', 'users');
-  return resultado.dados || [];
-}
-
-async function listarProfessores() {
-  const users = await listarUsers();
-  return users.filter(u => u.perfil === 'professor' && u.activityStatus === 'true');
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
