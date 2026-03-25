@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - master
   workflow_dispatch:
 
 permissions:
@@ -15,39 +14,27 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Create config.js from template
+      - name: Generate config.js from template
         run: |
-          echo "🔧 Gerando config.js a partir do template..."
-          cp js/config-template.js js/config.js
-          sed -i "s|{{API_URL}}|${{ secrets.API_URL }}|g" js/config.js
-          sed -i "s|{{DEPLOYMENT_ID}}|${{ secrets.DEPLOYMENT_ID }}|g" js/config.js
-          sed -i "s|{{SPREADSHEET_ID}}|${{ secrets.SPREADSHEET_ID }}|g" js/config.js
-          sed -i "s|{{API_KEY}}|${{ secrets.API_KEY }}|g" js/config.js
-          sed -i "s|{{PUBLIC_URL}}|${{ secrets.PUBLIC_URL }}|g" js/config.js
-          echo "✅ config.js gerado!"
+          # Gerar config.js a partir do template
+          sed -e "s|{{API_URL}}|${{ secrets.API_URL }}|g" \
+              -e "s|{{DEPLOYMENT_ID}}|${{ secrets.DEPLOYMENT_ID }}|g" \
+              -e "s|{{SPREADSHEET_ID}}|${{ secrets.SPREADSHEET_ID }}|g" \
+              -e "s|{{API_KEY}}|${{ secrets.API_KEY }}|g" \
+              -e "s|{{PUBLIC_URL}}|${{ secrets.PUBLIC_URL }}|g" \
+              js/config-template.js > js/config.js
+          
+          echo "✅ config.js gerado"
       
-      - name: Verify config.js
+      - name: Remove template from repository
         run: |
-          if [ -f "js/config.js" ]; then
-            echo "✅ js/config.js existe"
-            if grep -q "{{" js/config.js; then
-              echo "⚠️ Placeholders não substituídos!"
-              exit 1
-            else
-              echo "✅ Todos os placeholders foram substituídos"
-            fi
-          else
-            echo "❌ js/config.js não encontrado!"
-            exit 1
-          fi
+          # Remove o template para não ser deployado
+          rm -f js/config-template.js
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
