@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <meta name="description" content="Sistema de Gestão AEE - Atendimento Educacional Especializado">
   <title>Sistema AEE - Professor</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
@@ -11,7 +10,6 @@
     .filter-group { flex: 1; min-width: 150px; }
     .badge-pei { background: var(--primary-light); color: var(--primary-dark); padding: 0.25rem 0.5rem; border-radius: 20px; font-size: 0.75rem; }
     .historico-pei { background: var(--gray-50); padding: 0.5rem; border-radius: var(--radius-sm); margin-top: 0.5rem; font-size: 0.75rem; }
-    .historico-pei span { display: inline-block; background: var(--gray-200); padding: 0.2rem 0.5rem; border-radius: 15px; margin: 0.2rem; }
   </style>
 </head>
 <body>
@@ -41,9 +39,12 @@
       </div>
       
       <div class="table-responsive">
-        <table>
-          <thead><tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>PEIs</th><th>Ações</th></tr></thead>
-          <tbody id="listaEstudantes"><tr><td colspan="8" class="text-center">Carregando...</td></tr></tbody>
+         <table>
+          <thead>
+             <tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>PEIs</th><th>Ações</th></tr>
+          </thead>
+          <tbody id="listaEstudantes"><tr><td colspan="8" class="text-center">Carregando...</td></tr>
+          </tbody>
         </table>
       </div>
     </div>
@@ -53,8 +54,8 @@
   <script src="js/config.js"></script>
   <script src="js/api-netlify.js"></script>
   <script>
-    function escapeHtml(t){if(!t)return '';const e=document.createElement('div');return e.textContent=t,e.innerHTML}
-    function formatarData(e){if(!e)return '';const t=new Date(e);return isNaN(t.getTime())?e:t.toLocaleDateString('pt-BR')}
+    function escapeHtml(t){if(!t)return'';const e=document.createElement('div');return e.textContent=t,e.innerHTML}
+    function formatarData(e){if(!e)return'';const t=new Date(e);return isNaN(t.getTime())?e:t.toLocaleDateString('pt-BR')}
     function fecharModalConfirmacao(){document.getElementById('modalConfirmacao').classList.remove('active')}
     
     let estudantesCache=[], peisCache=[], currentUser=null;
