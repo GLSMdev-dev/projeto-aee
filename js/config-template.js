@@ -3,10 +3,9 @@
 // ============================================
 
 // URL do Web App (seu Apps Script - ATUALIZADA)
-const API_URL = 'https://script.google.com/macros/s/AKfycbyJye2-1oAxorEpXYAHV1NhQx0g3QaNP2LOasTnIYJZ7tZt0gx0IR3RbiOnun7T80pagQ/exec';
-
+const API_URL = 'https://script.google.com/macros/s/AKfycbwtnh8Nea5MjIoaq-ldpfJfN5Lqetwh4PovBcZnUZUYbY4vbrWwKXGLTdLzYeBQA55yXA/exec';
 // Código de implantação
-const DEPLOYMENT_ID = 'AKfycbyJye2-1oAxorEpXYAHV1NhQx0g3QaNP2LOasTnIYJZ7tZt0gx0IR3RbiOnun7T80pagQ';
+const DEPLOYMENT_ID = 'AKfycbwtnh8Nea5MjIoaq-ldpfJfN5Lqetwh4PovBcZnUZUYbY4vbrWwKXGLTdLzYeBQA55yXA';
 
 // Configuração para leitura direta via Google Sheets API
 const SHEETS_CONFIG = {
