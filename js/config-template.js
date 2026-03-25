@@ -1,5 +1,5 @@
 // ============================================
-// CONFIGURAÇÃO DO SISTEMA
+// CONFIGURAÇÃO DO SISTEMA AEE
 // ============================================
 
 const API_URL = '{{API_URL}}';
@@ -11,7 +11,7 @@ const SHEETS_CONFIG = {
   publicUrl: '{{PUBLIC_URL}}',
   ranges: {
     estudantes: 'estudantes!A:J',
-    peis: 'peis!A:J',
+    peis: 'peis!A:L',
     users: 'users!A:G'
   }
 };
