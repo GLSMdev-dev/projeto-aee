@@ -186,6 +186,26 @@ async function verificarConexao() {
     return false;
   }
 }
+// ============================================
+// FUNÇÕES PARA USUÁRIOS (ADMIN)
+// ============================================
+
+async function listarUsers() {
+  const resultado = await chamarAppsScript('listar', 'users');
+  return resultado.dados || [];
+}
+
+async function criarUser(user) {
+  return await chamarAppsScript('criar', 'user', user);
+}
+
+async function atualizarUser(id, user) {
+  return await chamarAppsScript('atualizar', 'user', user, id);
+}
+
+async function deletarUser(id) {
+  return await chamarAppsScript('deletar', 'user', null, id);
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🔍 Verificando conexão...');
