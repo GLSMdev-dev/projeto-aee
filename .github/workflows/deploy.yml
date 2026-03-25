@@ -12,8 +12,14 @@ permissions:
   pages: write
   id-token: write
 
+# Permite apenas um deploy por vez
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   deploy:
+    environment: github-pages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,6 +29,7 @@ jobs:
         run: |
           cp js/config-template.js js/config.js
           echo "✅ config.js copiado"
+          cat js/config.js | head -5
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -33,4 +40,5 @@ jobs:
           path: '.'
       
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
