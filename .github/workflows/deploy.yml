@@ -6,13 +6,11 @@ on:
       - main
   workflow_dispatch:
 
-# Permissões necessárias
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Permite apenas um deploy por vez
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -24,12 +22,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: Copy config file
-        run: |
-          cp js/config-template.js js/config.js
-          echo "✅ config.js copiado"
-          cat js/config.js | head -5
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
