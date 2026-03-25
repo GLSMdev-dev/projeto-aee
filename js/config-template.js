@@ -22,6 +22,6 @@ const SHEETS_CONFIG = {
 };
 
 // Flag para usar leitura via API
-const USAR_GOOGLE_SHEETS_API_PARA_LEITURA = true;
+const USAR_GOOGLE_SHEETS_API_PARA_LEITURA = false;
 
 console.log('✅ Configuração carregada');
