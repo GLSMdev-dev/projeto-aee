@@ -146,16 +146,19 @@ async function listarPEIs(estudanteId = null) {
 }
 
 async function criarPEI(pei) {
-  console.log('criarPEI recebido:', pei);
+  console.log('📝 criarPEI recebido:', pei);
   mostrarLoading(true);
   try {
     const user = JSON.parse(localStorage.getItem('user'));
     if (user) {
       pei.professorId = user.id;
+      console.log('👤 professorId adicionado:', user.id);
+    } else {
+      console.warn('⚠️ Usuário não encontrado no localStorage');
     }
     pei.status = 'ativo';
     const resultado = await chamarAppsScript('criar', 'pei', pei);
-    console.log('Resultado criarPEI:', resultado);
+    console.log('✅ Resultado criarPEI:', resultado);
     mostrarMensagem('✅ PEI criado!', 'success');
     return resultado;
   } catch (error) {
