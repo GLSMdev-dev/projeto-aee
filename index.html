@@ -41,7 +41,7 @@
       <div class="table-responsive">
           <table>
           <thead>
-              <tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>PEIs</th><th>Ações</th></tr>
+                <tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>PEIs</th><th>Ações</th></tr>
           </thead>
           <tbody id="listaEstudantes"><tr><td colspan="8" class="text-center">Carregando...</td></tr>
           </tbody>
@@ -62,15 +62,15 @@
     
     function verificarAuth(){const e=localStorage.getItem('user');if(!e){window.location.href='login.html';return null}const t=JSON.parse(e);document.getElementById('userNome').textContent=t.nome;return t}
     
-    async function carregarDados(){const e=document.getElementById('listaEstudantes');e.innerHTML='<tr><td colspan="8" class="text-center">Carregando...</td></tr>';try{estudantesCache=await listarEstudantes();peisCache=await listarPEIs();popularFiltros();aplicarFiltros()}catch(t){console.error(t),e.innerHTML='<tr><td colspan="8" class="text-center">❌ Erro ao carregar</td></tr>'}finally{mostrarLoading(false)}}
+    async function carregarDados(){const e=document.getElementById('listaEstudantes');e.innerHTML='<tr><td colspan="8" class="text-center">Carregando...</td></tr>';try{estudantesCache=await listarEstudantes();peisCache=await listarPEIs();console.log('Estudantes carregados:', estudantesCache);popularFiltros();aplicarFiltros()}catch(t){console.error(t),e.innerHTML='<tr><td colspan="8" class="text-center">❌ Erro ao carregar</td></tr>'}finally{mostrarLoading(false)}}
     
     function popularFiltros(){const e=[...new Set(estudantesCache.map(e=>e.anoEscolar).filter(e=>e))];document.getElementById('filtroAno').innerHTML='<option value="">Todos os anos</option>'+e.map(e=>`<option value="${e}">${e}</option>`).join('')}
     
-    function renderizarEstudantes(e){const t=document.getElementById('listaEstudantes');if(!e||0===e.length){t.innerHTML='<tr><td colspan="8" class="text-center">📭 Nenhum estudante cadastrado</td></tr>';return}const n=peisCache.reduce((e,t)=>(e[t.estudanteId]=(e[t.estudanteId]||0)+1,e),{});t.innerHTML=e.map(e=>{const t=peisCache.filter(t=>t.estudanteId==e.id).map(e=>e.dataCriacao?.split(' ')[0]||'sem data').join(', ');return`<tr><td>${escapeHtml(e.matricula||'-')}</td><td><strong>${escapeHtml(e.nome)}</strong><div class="historico-pei">📅 ${t||'Nenhum PEI'}</div></td><td>${escapeHtml(e.anoEscolar||'-')}</td><td>${escapeHtml(e.turno)}</td><td>${escapeHtml(e.deficiencia)}</td><td>${escapeHtml(e.CID||'-')}</td><td><span class="badge-pei">${n[e.id]||0} PEI(s)</span></td><td class="acoes"><button class="btn btn-sm btn-primary" onclick="criarPEI(${e.id})">📄 Novo PEI</button><button class="btn btn-sm btn-warning" onclick="visualizarPEI(${e.id})">👁️ Ver PEIs</button></td></tr>`}).join('')}
+    function renderizarEstudantes(e){const t=document.getElementById('listaEstudantes');if(!e||0===e.length){t.innerHTML='<tr><td colspan="8" class="text-center">📭 Nenhum estudante cadastrado</td></tr>';return}const n=peisCache.reduce((e,t)=>(e[t.estudanteId]=(e[t.estudanteId]||0)+1,e),{});t.innerHTML=e.map(e=>{const t=peisCache.filter(t=>t.estudanteId==e.id).map(e=>e.dataCriacao?.split(' ')[0]||'sem data').join(', ');console.log('Renderizando estudante:', e.id, e.nome);return`<tr><td>${escapeHtml(e.matricula||'-')}</td><td><strong>${escapeHtml(e.nome)}</strong><div class="historico-pei">📅 ${t||'Nenhum PEI'}</div></td><td>${escapeHtml(e.anoEscolar||'-')}</td><td>${escapeHtml(e.turno)}</td><td>${escapeHtml(e.deficiencia)}</td><td>${escapeHtml(e.CID||'-')}</td><td><span class="badge-pei">${n[e.id]||0} PEI(s)</span></td><td class="acoes"><button class="btn btn-sm btn-primary" onclick="criarPEI(${e.id})">📄 Novo PEI</button><button class="btn btn-sm btn-warning" onclick="visualizarPEI(${e.id})">👁️ Ver PEIs</button></td></tr>`}).join('')}
     
     function aplicarFiltros(){const e=document.getElementById('filtroNome')?.value.toLowerCase()||'',t=document.getElementById('filtroAno')?.value||'',n=document.getElementById('filtroTurno')?.value||'';let o=[...estudantesCache];e&&(o=o.filter(t=>t.nome?.toLowerCase().includes(e))),t&&(o=o.filter(e=>e.anoEscolar===t)),n&&(o=o.filter(e=>e.turno===n)),renderizarEstudantes(o)}
     
-    function criarPEI(e){console.log('criarPEI chamado com ID:', e);if(!e||e===undefined){console.error('estudanteId inválido');return}window.location.href=`pei.html?estudanteId=${e}`}
+    function criarPEI(e){console.log('criarPEI chamado com ID:', e, 'tipo:', typeof e);if(!e || e === undefined || e === null || e === 'undefined'){console.error('estudanteId inválido');mostrarMensagem('Erro: ID do estudante não encontrado','error');return}window.location.href=`pei.html?estudanteId=${e}`}
     function visualizarPEI(e){console.log('visualizarPEI chamado com ID:', e);if(!e||e===undefined){console.error('estudanteId inválido');return}window.location.href=`visualizar-pei.html?estudanteId=${e}`}
     
     document.getElementById('btnLogout').onclick=()=>{localStorage.removeItem('user'),window.location.href='login.html'}

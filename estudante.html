@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Sistema AEE - Cadastro de Estudante</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .info-box {
+      background: var(--primary-light);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      border-left: 4px solid var(--primary);
+      font-size: 0.875rem;
+    }
+  </style>
 </head>
 <body>
   <div id="loading" class="loading">
@@ -14,7 +24,7 @@
   <nav class="navbar">
     <h1>🏫 Sistema AEE - PEI</h1>
     <div class="nav-links">
-      <a href="index.html">← Voltar</a>
+      <a href="javascript:history.back()">← Voltar</a>
     </div>
   </nav>
   
@@ -24,22 +34,29 @@
         <h2 id="formTitle">➕ Cadastro de Estudante</h2>
       </div>
       
+      <div class="info-box">
+        📌 Campos obrigatórios: Matrícula, Nome, Data de Nascimento, Turno, Deficiência, Ano Escolar
+      </div>
+      
       <form id="formEstudante">
         <input type="hidden" id="estudanteId" value="">
         
         <div class="form-row">
           <div class="form-group">
+            <label for="matricula">Matrícula *</label>
+            <input type="text" id="matricula" required placeholder="Número da matrícula">
+          </div>
+          <div class="form-group">
             <label for="nome">Nome completo *</label>
             <input type="text" id="nome" required>
-          </div>
-          
-          <div class="form-group">
-            <label for="dataNascimento">Data de nascimento *</label>
-            <input type="date" id="dataNascimento" required>
           </div>
         </div>
         
         <div class="form-row">
+          <div class="form-group">
+            <label for="dataNascimento">Data de nascimento *</label>
+            <input type="date" id="dataNascimento" required>
+          </div>
           <div class="form-group">
             <label for="turno">Turno *</label>
             <select id="turno" required>
@@ -50,33 +67,44 @@
               <option value="Integral">Integral</option>
             </select>
           </div>
-          
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="anoEscolar">Ano Escolar *</label>
+            <select id="anoEscolar" required>
+              <option value="">Selecione</option>
+              <option value="1º Ano">1º Ano</option>
+              <option value="2º Ano">2º Ano</option>
+              <option value="3º Ano">3º Ano</option>
+              <option value="4º Ano">4º Ano</option>
+              <option value="5º Ano">5º Ano</option>
+              <option value="6º Ano">6º Ano</option>
+              <option value="7º Ano">7º Ano</option>
+              <option value="8º Ano">8º Ano</option>
+              <option value="9º Ano">9º Ano</option>
+            </select>
+          </div>
           <div class="form-group">
             <label for="deficiencia">Deficiência/Transtorno *</label>
             <input type="text" id="deficiencia" required placeholder="Ex: TEA, Deficiência Visual, etc.">
           </div>
         </div>
         
-        <div class="form-group">
-          <label for="descricao">Descrição adicional</label>
-          <textarea id="descricao" rows="3" placeholder="Necessidades específicas, observações importantes..."></textarea>
-        </div>
-        
         <div class="form-row">
           <div class="form-group">
-            <label for="responsaveis">Responsáveis *</label>
-            <input type="text" id="responsaveis" required placeholder="Nome dos pais ou responsáveis">
+            <label for="CID">CID (Código Internacional de Doenças)</label>
+            <input type="text" id="CID" placeholder="Ex: F84.0, H54.0">
           </div>
-          
           <div class="form-group">
-            <label for="contato">Contato *</label>
-            <input type="text" id="contato" required placeholder="Telefone, WhatsApp, e-mail">
+            <label for="descricao">Descrição adicional</label>
+            <textarea id="descricao" rows="3" placeholder="Necessidades específicas, observações importantes..."></textarea>
           </div>
         </div>
         
         <div class="form-group">
           <button type="submit" class="btn btn-primary">💾 Salvar</button>
-          <button type="button" class="btn" onclick="window.location.href='index.html'">Cancelar</button>
+          <button type="button" class="btn" onclick="javascript:history.back()">Cancelar</button>
         </div>
       </form>
     </div>
@@ -86,13 +114,20 @@
   <script src="js/config.js"></script>
   <script src="js/api-netlify.js"></script>
   <script>
-    // Obter ID da URL
     function getUrlParameter(name) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
     }
     
-    // Carregar dados para edição
+    function formatarDataInput(dataStr) {
+      if (!dataStr) return '';
+      const partes = dataStr.split('/');
+      if (partes.length === 3) {
+        return `${partes[2]}-${partes[1]}-${partes[0]}`;
+      }
+      return dataStr;
+    }
+    
     async function carregarEstudanteParaEdicao(id) {
       mostrarLoading(true);
       try {
@@ -102,13 +137,14 @@
         if (estudante) {
           document.getElementById('formTitle').textContent = '✏️ Editar Estudante';
           document.getElementById('estudanteId').value = estudante.id;
+          document.getElementById('matricula').value = estudante.matricula || '';
           document.getElementById('nome').value = estudante.nome || '';
           document.getElementById('dataNascimento').value = formatarDataInput(estudante.dataNascimento);
           document.getElementById('turno').value = estudante.turno || '';
+          document.getElementById('anoEscolar').value = estudante.anoEscolar || '';
           document.getElementById('deficiencia').value = estudante.deficiencia || '';
+          document.getElementById('CID').value = estudante.CID || '';
           document.getElementById('descricao').value = estudante.descricao || '';
-          document.getElementById('responsaveis').value = estudante.responsaveis || '';
-          document.getElementById('contato').value = estudante.contato || '';
         }
       } catch (error) {
         console.error('Erro ao carregar estudante:', error);
@@ -118,24 +154,24 @@
       }
     }
     
-    // Salvar estudante
     document.getElementById('formEstudante').addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const id = document.getElementById('estudanteId').value;
       const estudante = {
+        matricula: document.getElementById('matricula').value,
         nome: document.getElementById('nome').value,
         dataNascimento: document.getElementById('dataNascimento').value,
         turno: document.getElementById('turno').value,
+        anoEscolar: document.getElementById('anoEscolar').value,
         deficiencia: document.getElementById('deficiencia').value,
-        descricao: document.getElementById('descricao').value,
-        responsaveis: document.getElementById('responsaveis').value,
-        contato: document.getElementById('contato').value
+        CID: document.getElementById('CID').value,
+        descricao: document.getElementById('descricao').value
       };
       
-      // Validações básicas
-      if (!estudante.nome || !estudante.dataNascimento || !estudante.turno || 
-          !estudante.deficiencia || !estudante.responsaveis || !estudante.contato) {
+      // Validações
+      if (!estudante.matricula || !estudante.nome || !estudante.dataNascimento || 
+          !estudante.turno || !estudante.deficiencia || !estudante.anoEscolar) {
         mostrarMensagem('Preencha todos os campos obrigatórios (*)', 'warning');
         return;
       }
@@ -152,7 +188,7 @@
         }
         
         setTimeout(() => {
-          window.location.href = 'index.html';
+          window.location.href = 'javascript:history.back()';
         }, 1000);
         
       } catch (error) {
@@ -163,7 +199,6 @@
       }
     });
     
-    // Inicialização
     const estudanteId = getUrlParameter('id');
     if (estudanteId) {
       carregarEstudanteParaEdicao(estudanteId);

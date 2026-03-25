@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema AEE - Login</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    }
+    .login-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow-xl);
+    }
+    .login-card h2 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+    }
+    .login-card .logo {
+      text-align: center;
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    .btn-login {
+      width: 100%;
+      margin-top: 1rem;
+    }
+    .error-message {
+      color: var(--danger);
+      text-align: center;
+      margin-top: 1rem;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="login-container">
+    <div class="login-card">
+      <div class="logo">🏫</div>
+      <h2>Sistema AEE - PEI</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Usuário</label>
+          <input type="text" id="username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary btn-login">Entrar</button>
+        <div id="errorMessage" class="error-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api-netlify.js"></script>
+  <script>
+    // Função de login
+    async function fazerLogin(username, senha) {
+      const url = `${API_URL}?action=login&_data=${encodeURIComponent(JSON.stringify({ username, senha }))}&_=${Date.now()}`;
+      
+      try {
+        const response = await fetch(url);
+        const resultado = await response.json();
+        
+        if (resultado.sucesso) {
+          // Salvar dados do usuário
+          localStorage.setItem('user', JSON.stringify(resultado.user));
+          // Redirecionar conforme perfil
+          if (resultado.user.perfil === 'adm') {
+            window.location.href = 'admin.html';
+          } else if (resultado.user.perfil === 'gestor') {
+            window.location.href = 'gestor.html';
+          } else {
+            window.location.href = 'index.html';
+          }
+        } else {
+          const errorDiv = document.getElementById('errorMessage');
+          errorDiv.textContent = resultado.erro || 'Usuário ou senha inválidos';
+          errorDiv.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Erro no login:', error);
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.textContent = 'Erro de conexão. Tente novamente.';
+        errorDiv.style.display = 'block';
+      }
+    }
+
+    // Evento do formulário
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const senha = document.getElementById('senha').value;
+      fazerLogin(username, senha);
+    });
+
+    // Verificar se já está logado
+    const userLogado = localStorage.getItem('user');
+    if (userLogado) {
+      const user = JSON.parse(userLogado);
+      if (user.perfil === 'adm') window.location.href = 'admin.html';
+      else if (user.perfil === 'gestor') window.location.href = 'gestor.html';
+      else window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>
