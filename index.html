@@ -41,7 +41,7 @@
       <div class="table-responsive">
          <table>
           <thead>
-             <tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>PEIs</th><th>Ações</th></tr>
+              <tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>PEIs</th><th>Ações</th></tr>
           </thead>
           <tbody id="listaEstudantes"><tr><td colspan="8" class="text-center">Carregando...</td></tr>
           </tbody>
@@ -70,8 +70,8 @@
     
     function aplicarFiltros(){const e=document.getElementById('filtroNome')?.value.toLowerCase()||'',t=document.getElementById('filtroAno')?.value||'',n=document.getElementById('filtroTurno')?.value||'';let o=[...estudantesCache];e&&(o=o.filter(t=>t.nome?.toLowerCase().includes(e))),t&&(o=o.filter(e=>e.anoEscolar===t)),n&&(o=o.filter(e=>e.turno===n)),renderizarEstudantes(o)}
     
-    function criarPEI(e){window.location.href=`pei.html?estudanteId=${e}`}
-    function visualizarPEI(e){window.location.href=`visualizar-pei.html?estudanteId=${e}`}
+    function criarPEI(e){if(!e){console.error('estudanteId inválido');return}window.location.href=`pei.html?estudanteId=${e}`}
+    function visualizarPEI(e){if(!e){console.error('estudanteId inválido');return}window.location.href=`visualizar-pei.html?estudanteId=${e}`}
     
     document.getElementById('btnLogout').onclick=()=>{localStorage.removeItem('user'),window.location.href='login.html'}
     document.getElementById('btnAtualizar').onclick=()=>carregarDados()
