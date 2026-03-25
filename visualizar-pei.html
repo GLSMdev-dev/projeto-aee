@@ -38,6 +38,9 @@
     .btn-pdf { background: var(--danger); color: white; }
     .btn-imprimir { background: var(--secondary); color: white; }
     .btn-editar { background: var(--primary); color: white; }
+    .filtro-peis { background: var(--gray-100); padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .filtro-peis label { font-weight: 600; margin: 0; }
+    .filtro-peis select { padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--gray-300); flex: 1; min-width: 200px; }
     @media print { .no-print { display: none !important; } .pei-container { box-shadow: none; padding: 0; } .secao-pei { break-inside: avoid; } }
   </style>
 </head>
@@ -54,6 +57,13 @@
       <button class="btn btn-editar" id="btnEditarPEI">✏️ Editar PEI</button>
       <button class="btn btn-imprimir" id="btnImprimir">🖨️ Imprimir</button>
       <button class="btn btn-pdf" id="btnGerarPDF">📄 Gerar PDF</button>
+    </div>
+    
+    <div class="filtro-peis no-print" id="filtroPEIs" style="display: none;">
+      <label>📋 PEIs do Estudante:</label>
+      <select id="selecionarPEI">
+        <option value="">Carregando...</option>
+      </select>
     </div>
     
     <div id="peiParaImpressao">
@@ -102,6 +112,46 @@
     // ============================================
     let peiAtual = null;
     let estudanteAtual = null;
+    let listaPEIs = [];
+    
+    // ============================================
+    // CARREGAR LISTA DE PEIs
+    // ============================================
+    async function carregarListaPEIs(estudanteId) {
+      try {
+        listaPEIs = await listarPEIs(estudanteId);
+        const select = document.getElementById('selecionarPEI');
+        
+        if (listaPEIs.length === 0) {
+          select.innerHTML = '<option value="">Nenhum PEI encontrado</option>';
+          document.getElementById('filtroPEIs').style.display = 'none';
+          return;
+        }
+        
+        document.getElementById('filtroPEIs').style.display = 'flex';
+        
+        select.innerHTML = '<option value="">-- Selecione um PEI --</option>';
+        listaPEIs.forEach(pei => {
+          const data = pei.dataCriacao ? pei.dataCriacao.split(' ')[0] : 'Sem data';
+          const resumo = pei.objetivosGerais ? pei.objetivosGerais.substring(0, 50) : 'Sem objetivos';
+          const option = document.createElement('option');
+          option.value = pei.id;
+          option.textContent = `${data} - ${resumo}...`;
+          select.appendChild(option);
+        });
+        
+        select.addEventListener('change', (e) => {
+          if (e.target.value) {
+            const peiSelecionado = listaPEIs.find(p => p.id == e.target.value);
+            if (peiSelecionado) {
+              renderizarPEI(estudanteId, peiSelecionado.id);
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao carregar lista de PEIs:', error);
+      }
+    }
     
     // ============================================
     // RENDERIZAR PEI
@@ -114,10 +164,11 @@
         if (!estudanteAtual) throw new Error('Estudante não encontrado');
         
         const peis = await listarPEIs(estudanteId);
+        
         if (peiId) {
           peiAtual = peis.find(p => p.id == peiId);
         } else if (peis.length > 0) {
-          peiAtual = peis[peis.length - 1];
+          peiAtual = peis[0];
         }
         
         if (!peiAtual) {
@@ -142,9 +193,12 @@
         }
         
         // Garantir que a data seja exibida corretamente
-        const dataPEI = peiAtual.dataCriacao && peiAtual.dataCriacao !== 'undefined' 
-          ? formatarData(peiAtual.dataCriacao) 
-          : new Date().toLocaleDateString('pt-BR');
+        let dataPEI = 'Data não disponível';
+        if (peiAtual.dataCriacao && peiAtual.dataCriacao !== 'undefined' && peiAtual.dataCriacao !== '') {
+          dataPEI = peiAtual.dataCriacao;
+        } else {
+          dataPEI = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR');
+        }
         
         const html = `
           <div class="pei-header">
@@ -236,6 +290,7 @@
       }
       
       await renderizarPEI(estudanteId, peiId);
+      await carregarListaPEIs(estudanteId);
       
       document.getElementById('btnEditarPEI')?.addEventListener('click', () => {
         window.location.href = `pei.html?estudanteId=${estudanteId}&peiId=${peiAtual?.id || ''}`;
