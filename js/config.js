@@ -2,11 +2,11 @@
 // CONFIGURAÇÃO DO SISTEMA AEE
 // ============================================
 
-// URL do Web App (Apps Script - ÚLTIMA VERSÃO)
-const API_URL = 'https://script.google.com/macros/s/AKfycby__waWPxdnxwzMgDyOrDIS2f_zzLrUUw3VjXXHKbsNfMWa_OrqoHIjwRF6Q0PVojcd/exec';
+// URL do Web App (Apps Script - VERSÃO FINAL)
+const API_URL = 'https://script.google.com/macros/s/AKfycbwgf7IOPouerldwTSWRgQGX8H6aDmWtV2CYEgn6JHPg5RtBFD9Y7dm6B-vVvKIm8Nxi_A/exec';
 
 // Código de implantação
-const DEPLOYMENT_ID = 'AKfycby__waWPxdnxwzMgDyOrDIS2f_zzLrUUw3VjXXHKbsNfMWa_OrqoHIjwRF6Q0PVojcd';
+const DEPLOYMENT_ID = 'AKfycbwgf7IOPouerldwTSWRgQGX8H6aDmWtV2CYEgn6JHPg5RtBFD9Y7dm6B-vVvKIm8Nxi_A';
 
 // Configuração para leitura direta via Google Sheets API
 const SHEETS_CONFIG = {
