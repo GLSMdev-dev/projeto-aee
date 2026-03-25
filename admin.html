@@ -41,12 +41,12 @@
       font-weight: 500;
     }
     .status-active {
-      background: var(--success-light, #d4edda);
-      color: var(--success-dark, #155724);
+      background: #d4edda;
+      color: #155724;
     }
     .status-inactive {
       background: #f8d7da;
-      color: var(--danger-dark);
+      color: #721c24;
     }
     .perfil-badge {
       display: inline-block;
@@ -86,7 +86,7 @@
         <div class="table-responsive">
           <table>
             <thead>
-              <tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>Ações</th</tr>
+              <tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>Ações</th></tr>
             </thead>
             <tbody id="listaEstudantes"></tbody>
           </table>
@@ -123,19 +123,44 @@
     </div>
   </div>
 
-  <!-- Modal de confirmação -->
   <div id="modalConfirmacao" class="modal"><div class="modal-content"><div class="modal-header"><h3>Confirmar</h3><button class="btn btn-sm" onclick="fecharModal()">✕</button></div><p id="confirmacaoMensagem"></p><div class="modal-footer"><button id="cancelarBtn" class="btn">Cancelar</button><button id="confirmarBtn" class="btn btn-danger">Confirmar</button></div></div></div>
 
   <script src="js/utils.js"></script>
   <script src="js/config.js"></script>
   <script src="js/api-netlify.js"></script>
   <script>
+    // ============================================
+    // FUNÇÕES AUXILIARES
+    // ============================================
+    function escapeHtml(texto) {
+      if (!texto) return '';
+      const div = document.createElement('div');
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+    
+    function formatarData(dataStr) {
+      if (!dataStr) return '';
+      const data = new Date(dataStr);
+      if (isNaN(data.getTime())) return dataStr;
+      return data.toLocaleDateString('pt-BR');
+    }
+    
+    function fecharModal() {
+      document.getElementById('modalConfirmacao').classList.remove('active');
+    }
+    
+    // ============================================
+    // VARIÁVEIS GLOBAIS
+    // ============================================
     let currentUser = null;
     let estudantes = [];
     let peis = [];
     let usuarios = [];
 
-    // Verificar autenticação
+    // ============================================
+    // AUTENTICAÇÃO
+    // ============================================
     function verificarAuth() {
       const user = localStorage.getItem('user');
       if (!user) { window.location.href = 'login.html'; return null; }
@@ -145,21 +170,24 @@
       return userObj;
     }
 
-    // Carregar dados
-    async function carregarEstudantes() { estudantes = await listarEstudantes(); renderizarEstudantes(); }
-    async function carregarPEIs() { peis = await listarPEIs(); renderizarPEIs(); }
-    async function carregarUsuarios() { usuarios = await listar('users'); renderizarUsuarios(); }
-
+    // ============================================
+    // CRUD ESTUDANTES
+    // ============================================
+    async function carregarEstudantes() { 
+      estudantes = await listarEstudantes(); 
+      renderizarEstudantes(); 
+    }
+    
     function renderizarEstudantes() {
       const tbody = document.getElementById('listaEstudantes');
       tbody.innerHTML = estudantes.map(e => `
         <tr>
-          <td>${e.matricula || '-'}</td>
+          <td>${escapeHtml(e.matricula || '-')}</td>
           <td>${escapeHtml(e.nome)}</td>
-          <td>${e.anoEscolar || '-'}</td>
-          <td>${e.turno || '-'}</td>
-          <td>${e.deficiencia || '-'}</td>
-          <td>${e.CID || '-'}</td>
+          <td>${escapeHtml(e.anoEscolar || '-')}</td>
+          <td>${escapeHtml(e.turno || '-')}</td>
+          <td>${escapeHtml(e.deficiencia || '-')}</td>
+          <td>${escapeHtml(e.CID || '-')}</td>
           <td class="acoes">
             <button class="btn btn-sm btn-secondary" onclick="editarEstudante(${e.id})">✏️</button>
             <button class="btn btn-sm btn-danger" onclick="excluirEstudante(${e.id})">🗑️</button>
@@ -167,21 +195,49 @@
         </tr>
       `).join('');
     }
+    
+    function editarEstudante(id) { window.location.href = `estudante.html?id=${id}`; }
+    
+    async function excluirEstudante(id) {
+      if (confirm('Excluir estudante?')) { 
+        await deletarEstudante(id); 
+        carregarEstudantes(); 
+      }
+    }
 
+    // ============================================
+    // CRUD PEIs
+    // ============================================
+    async function carregarPEIs() { 
+      peis = await listarPEIs(); 
+      renderizarPEIs(); 
+    }
+    
     function renderizarPEIs() {
       const tbody = document.getElementById('listaPEIs');
       const filtro = document.getElementById('filtroPEI')?.value.toLowerCase() || '';
-      const filtrados = peis.filter(p => p.nome_estudante?.toLowerCase().includes(filtro));
+      const estudantesMap = Object.fromEntries(estudantes.map(e => [e.id, e.nome]));
+      const filtrados = peis.filter(p => (estudantesMap[p.estudanteId] || '').toLowerCase().includes(filtro));
       tbody.innerHTML = filtrados.map(p => `
         <tr>
-          <td>${escapeHtml(p.nome_estudante || 'N/A')}</td>
+          <td>${escapeHtml(estudantesMap[p.estudanteId] || 'N/A')}</td>
           <td>${formatarData(p.dataCriacao)}</td>
           <td>${escapeHtml(p.objetivosGerais?.substring(0, 50) || '')}...</td>
           <td class="acoes"><button class="btn btn-sm btn-warning" onclick="verPEI(${p.id}, ${p.estudanteId})">👁️ Ver</button></td>
         </tr>
       `).join('');
     }
+    
+    function verPEI(peiId, estudanteId) { window.location.href = `visualizar-pei.html?peiId=${peiId}&estudanteId=${estudanteId}`; }
 
+    // ============================================
+    // CRUD USUÁRIOS
+    // ============================================
+    async function carregarUsuarios() { 
+      usuarios = await listarUsers(); 
+      renderizarUsuarios(); 
+    }
+    
     function renderizarUsuarios() {
       const tbody = document.getElementById('listaUsuarios');
       tbody.innerHTML = usuarios.map(u => `
@@ -198,15 +254,19 @@
         </tr>
       `).join('');
     }
-
-    // Ações
-    function editarEstudante(id) { window.location.href = `estudante.html?id=${id}`; }
-    async function excluirEstudante(id) { if (confirm('Excluir estudante?')) { await deletarEstudante(id); carregarEstudantes(); } }
+    
     function editarUsuario(id) { window.location.href = `usuario.html?id=${id}`; }
-    async function excluirUsuario(id) { if (confirm('Excluir usuário?')) { await deletar('user', id); carregarUsuarios(); } }
-    function verPEI(peiId, estudanteId) { window.location.href = `visualizar-pei.html?peiId=${peiId}&estudanteId=${estudanteId}`; }
+    
+    async function excluirUsuario(id) { 
+      if (confirm('Excluir usuário?')) { 
+        await deletarUser(id); 
+        carregarUsuarios(); 
+      } 
+    }
 
-    // Tabs
+    // ============================================
+    // EVENTOS E INICIALIZAÇÃO
+    // ============================================
     document.querySelectorAll('.nav-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -226,7 +286,11 @@
 
     // Inicialização
     currentUser = verificarAuth();
-    if (currentUser) { carregarEstudantes(); carregarPEIs(); carregarUsuarios(); }
+    if (currentUser) { 
+      carregarEstudantes(); 
+      carregarPEIs(); 
+      carregarUsuarios(); 
+    }
   </script>
 </body>
 </html>
