@@ -7,22 +7,8 @@
   <title>Sistema AEE - Criar PEI</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .objetivo-card {
-      background: var(--gray-100);
-      border-radius: var(--border-radius);
-      margin-bottom: 1rem;
-      overflow: hidden;
-    }
-    .objetivo-header {
-      background: var(--primary-light);
-      padding: 0.75rem 1rem;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 600;
-      color: var(--primary-dark);
-    }
+    .objetivo-card { background: var(--gray-100); border-radius: var(--border-radius); margin-bottom: 1rem; overflow: hidden; }
+    .objetivo-header { background: var(--primary-light); padding: 0.75rem 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: var(--primary-dark); }
     .objetivo-header:hover { background: var(--gray-200); }
     .objetivo-content { padding: 1rem; display: none; border-top: 1px solid var(--gray-200); }
     .objetivo-content.active { display: block; }
@@ -101,7 +87,6 @@
   <script src="js/config.js"></script>
   <script src="js/api-netlify.js"></script>
   <script>
-    // Dados do documento (objetivos, atividades, etc.)
     const OBJETIVOS = [
       { id: 1, titulo: "Garantir o acesso, participação e aprendizagem do aluno na escola regular",
         especificos: ["1.1 Assegurar que o estudante participe das atividades da sala comum com os apoios necessários.","1.2 Identificar e eliminar barreiras que dificultam a participação plena do aluno.","1.3 Adaptar atividades, materiais e avaliações conforme as necessidades do estudante.","1.4 Promover práticas pedagógicas inclusivas em articulação com a sala de aula regular.","1.5 Garantir ambientes acessíveis, organizados e adequados às características do aluno."] },
@@ -139,19 +124,8 @@
     let estrategiasSelecionadas = new Set();
     let recursosSelecionados = new Set();
     
-    function escapeHtml(texto) {
-      if (!texto) return '';
-      const div = document.createElement('div');
-      div.textContent = texto;
-      return div.innerHTML;
-    }
-    
-    function formatarData(dataStr) {
-      if (!dataStr) return '';
-      const data = new Date(dataStr);
-      if (isNaN(data.getTime())) return dataStr;
-      return data.toLocaleDateString('pt-BR');
-    }
+    function escapeHtml(t){if(!t)return'';const e=document.createElement('div');return e.textContent=t,e.innerHTML}
+    function formatarData(e){if(!e)return'';const t=new Date(e);return isNaN(t.getTime())?e:t.toLocaleDateString('pt-BR')}
     
     function renderizarObjetivos() {
       const container = document.getElementById('objetivosContainer');
@@ -166,131 +140,132 @@
       container.innerHTML = html;
     }
     
-    function toggleObjetivo(id) { document.getElementById(`objetivoContent${id}`).classList.toggle('active'); }
-    
-    function toggleObjetivoEspecifico(objetivoId, especificoIdx, checked) {
-      if (!objetivosSelecionados[objetivoId]) objetivosSelecionados[objetivoId] = [];
-      if (checked) objetivosSelecionados[objetivoId].push(especificoIdx);
-      else objetivosSelecionados[objetivoId] = objetivosSelecionados[objetivoId].filter(i => i !== especificoIdx);
-      if (objetivosSelecionados[objetivoId].length === 0) delete objetivosSelecionados[objetivoId];
+    function toggleObjetivo(id){document.getElementById(`objetivoContent${id}`).classList.toggle('active')}
+    function toggleObjetivoEspecifico(objetivoId, especificoIdx, checked){
+      if(!objetivosSelecionados[objetivoId]) objetivosSelecionados[objetivoId]=[];
+      if(checked) objetivosSelecionados[objetivoId].push(especificoIdx);
+      else objetivosSelecionados[objetivoId]=objetivosSelecionados[objetivoId].filter(i=>i!==especificoIdx);
+      if(objetivosSelecionados[objetivoId].length===0) delete objetivosSelecionados[objetivoId];
       atualizarProgresso();
     }
     
-    function renderizarAtividades() {
-      const container = document.getElementById('atividadesContainer');
-      let html = '';
-      for (const [categoria, lista] of Object.entries(ATIVIDADES)) {
-        html += `<div class="atividade-categoria"><h4>${categoria}</h4><div class="atividade-lista">`;
-        lista.forEach(atividade => {
-          html += `<span class="badge-atividade ${atividadesSelecionadas.has(atividade) ? 'selected' : ''}" onclick="toggleAtividade('${escapeHtml(atividade).replace(/'/g, "\\'")}')">${escapeHtml(atividade)}</span>`;
+    function renderizarAtividades(){
+      const container=document.getElementById('atividadesContainer');
+      let html='';
+      for(const[categoria,lista]of Object.entries(ATIVIDADES)){
+        html+=`<div class="atividade-categoria"><h4>${categoria}</h4><div class="atividade-lista">`;
+        lista.forEach(atividade=>{
+          html+=`<span class="badge-atividade ${atividadesSelecionadas.has(atividade)?'selected':''}" onclick="toggleAtividade('${escapeHtml(atividade).replace(/'/g,"\\'")}')">${escapeHtml(atividade)}</span>`;
         });
-        html += `</div></div>`;
+        html+=`</div></div>`;
       }
-      container.innerHTML = html;
+      container.innerHTML=html;
     }
     
-    function toggleAtividade(atividade) {
-      if (atividadesSelecionadas.has(atividade)) atividadesSelecionadas.delete(atividade);
+    function toggleAtividade(atividade){
+      if(atividadesSelecionadas.has(atividade)) atividadesSelecionadas.delete(atividade);
       else atividadesSelecionadas.add(atividade);
       renderizarAtividades();
       atualizarProgresso();
     }
     
-    function renderizarEstrategias() {
-      const container = document.getElementById('estrategiasContainer');
-      let html = '';
-      ESTRATEGIAS.forEach(estrategia => {
-        html += `<label style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" ${estrategiasSelecionadas.has(estrategia) ? 'checked' : ''} onchange="toggleEstrategia('${escapeHtml(estrategia).replace(/'/g, "\\'")}', this.checked)"> ${escapeHtml(estrategia)}</label>`;
+    function renderizarEstrategias(){
+      const container=document.getElementById('estrategiasContainer');
+      let html='';
+      ESTRATEGIAS.forEach(estrategia=>{
+        html+=`<label style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" ${estrategiasSelecionadas.has(estrategia)?'checked':''} onchange="toggleEstrategia('${escapeHtml(estrategia).replace(/'/g,"\\'")}',this.checked)"> ${escapeHtml(estrategia)}</label>`;
       });
-      container.innerHTML = html;
+      container.innerHTML=html;
     }
     
-    function toggleEstrategia(estrategia, checked) {
-      if (checked) estrategiasSelecionadas.add(estrategia);
+    function toggleEstrategia(estrategia,checked){
+      if(checked) estrategiasSelecionadas.add(estrategia);
       else estrategiasSelecionadas.delete(estrategia);
       atualizarProgresso();
     }
     
-    function renderizarRecursos() {
-      const container = document.getElementById('recursosContainer');
-      let html = '';
-      RECURSOS.forEach(recurso => {
-        html += `<label style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" ${recursosSelecionados.has(recurso) ? 'checked' : ''} onchange="toggleRecurso('${escapeHtml(recurso).replace(/'/g, "\\'")}', this.checked)"> ${escapeHtml(recurso)}</label>`;
+    function renderizarRecursos(){
+      const container=document.getElementById('recursosContainer');
+      let html='';
+      RECURSOS.forEach(recurso=>{
+        html+=`<label style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" ${recursosSelecionados.has(recurso)?'checked':''} onchange="toggleRecurso('${escapeHtml(recurso).replace(/'/g,"\\'")}',this.checked)"> ${escapeHtml(recurso)}</label>`;
       });
-      container.innerHTML = html;
+      container.innerHTML=html;
     }
     
-    function toggleRecurso(recurso, checked) {
-      if (checked) recursosSelecionados.add(recurso);
+    function toggleRecurso(recurso,checked){
+      if(checked) recursosSelecionados.add(recurso);
       else recursosSelecionados.delete(recurso);
       atualizarProgresso();
     }
     
-    function coletarDadosPEI() {
-      const objetivosEspecificos = [];
-      for (const [objetivoId, indices] of Object.entries(objetivosSelecionados)) {
-        const objetivo = OBJETIVOS.find(o => o.id == objetivoId);
-        if (objetivo) indices.forEach(idx => objetivosEspecificos.push(objetivo.especificos[idx]));
+    function coletarDadosPEI(){
+      const objetivosEspecificos=[];
+      for(const[objetivoId,indices]of Object.entries(objetivosSelecionados)){
+        const objetivo=OBJETIVOS.find(o=>o.id==objetivoId);
+        if(objetivo) indices.forEach(idx=>objetivosEspecificos.push(objetivo.especificos[idx]));
       }
-      const objetivosGerais = Object.keys(objetivosSelecionados).map(id => {
-        const obj = OBJETIVOS.find(o => o.id == id);
+      const objetivosGerais=Object.keys(objetivosSelecionados).map(id=>{
+        const obj=OBJETIVOS.find(o=>o.id==id);
         return `${obj.id}. ${obj.titulo}`;
       });
-      return {
-        estudanteId: document.getElementById('estudanteId').value,
-        professorId: document.getElementById('professorId').value,
-        objetivosGerais: objetivosGerais.join('; '),
-        objetivosEspecificos: objetivosEspecificos.join('; '),
-        atividades: Array.from(atividadesSelecionadas).join('; '),
-        estrategias: Array.from(estrategiasSelecionadas).join('; '),
-        recursosAcessibilidade: Array.from(recursosSelecionados).join('; '),
-        materialApoio: document.getElementById('materialApoio').value,
-        relatoAtendimento: document.getElementById('relatoAtendimento').value
+      return{
+        estudanteId:document.getElementById('estudanteId').value,
+        professorId:document.getElementById('professorId').value,
+        objetivosGerais:objetivosGerais.join('; '),
+        objetivosEspecificos:objetivosEspecificos.join('; '),
+        atividades:Array.from(atividadesSelecionadas).join('; '),
+        estrategias:Array.from(estrategiasSelecionadas).join('; '),
+        recursosAcessibilidade:Array.from(recursosSelecionados).join('; '),
+        materialApoio:document.getElementById('materialApoio').value,
+        relatoAtendimento:document.getElementById('relatoAtendimento').value
       };
     }
     
-    function atualizarProgresso() {
-      let preenchido = 0;
-      if (Object.keys(objetivosSelecionados).length > 0) preenchido++;
-      if (atividadesSelecionadas.size > 0) preenchido++;
-      if (estrategiasSelecionadas.size > 0) preenchido++;
-      if (recursosSelecionados.size > 0) preenchido++;
-      if (document.getElementById('materialApoio').value.trim()) preenchido++;
-      document.getElementById('progressoBar').style.width = `${(preenchido / 5) * 100}%`;
+    function atualizarProgresso(){
+      let preenchido=0;
+      if(Object.keys(objetivosSelecionados).length>0) preenchido++;
+      if(atividadesSelecionadas.size>0) preenchido++;
+      if(estrategiasSelecionadas.size>0) preenchido++;
+      if(recursosSelecionados.size>0) preenchido++;
+      if(document.getElementById('materialApoio').value.trim()) preenchido++;
+      document.getElementById('progressoBar').style.width=`${(preenchido/5)*100}%`;
     }
     
-    async function inicializar() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const estudanteId = urlParams.get('estudanteId');
-      const peiId = urlParams.get('peiId');
+    async function inicializar(){
+      const urlParams=new URLSearchParams(window.location.search);
+      const estudanteId=urlParams.get('estudanteId');
+      const peiId=urlParams.get('peiId');
       
-      if (!estudanteId) {
-        mostrarMensagem('Estudante não identificado', 'error');
-        setTimeout(() => window.location.href = 'index.html', 2000);
+      if(!estudanteId){
+        mostrarMensagem('Estudante não identificado','error');
+        setTimeout(()=>window.location.href='index.html',2000);
         return;
       }
       
-      // Carregar professorId do localStorage
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (user) {
-        document.getElementById('professorId').value = user.id;
+      const user=JSON.parse(localStorage.getItem('user'));
+      if(user){
+        document.getElementById('professorId').value=user.id;
+        console.log('📝 professorId definido:',user.id);
+      }else{
+        console.error('❌ Usuário não encontrado no localStorage');
       }
       
-      document.getElementById('estudanteId').value = estudanteId;
+      document.getElementById('estudanteId').value=estudanteId;
       mostrarLoading(true);
-      try {
-        const estudantes = await listarEstudantes();
-        const estudante = estudantes.find(e => e.id == estudanteId);
-        if (estudante) {
-          document.getElementById('dadosEstudante').innerHTML = `
+      try{
+        const estudantes=await listarEstudantes();
+        const estudante=estudantes.find(e=>e.id==estudanteId);
+        if(estudante){
+          document.getElementById('dadosEstudante').innerHTML=`
             <p><strong>Nome:</strong> ${escapeHtml(estudante.nome)}</p>
-            <p><strong>Matrícula:</strong> ${escapeHtml(estudante.matricula || '-')}</p>
+            <p><strong>Matrícula:</strong> ${escapeHtml(estudante.matricula||'-')}</p>
             <p><strong>Data Nascimento:</strong> ${formatarData(estudante.dataNascimento)}</p>
             <p><strong>Turno:</strong> ${escapeHtml(estudante.turno)}</p>
-            <p><strong>Ano Escolar:</strong> ${escapeHtml(estudante.anoEscolar || '-')}</p>
+            <p><strong>Ano Escolar:</strong> ${escapeHtml(estudante.anoEscolar||'-')}</p>
             <p><strong>Deficiência:</strong> ${escapeHtml(estudante.deficiencia)}</p>
-            <p><strong>CID:</strong> ${escapeHtml(estudante.CID || '-')}</p>
-            ${estudante.descricao ? `<p><strong>Observações:</strong> ${escapeHtml(estudante.descricao)}</p>` : ''}
+            <p><strong>CID:</strong> ${escapeHtml(estudante.CID||'-')}</p>
+            ${estudante.descricao?`<p><strong>Observações:</strong> ${escapeHtml(estudante.descricao)}</p>`:''}
           `;
         }
         renderizarObjetivos();
@@ -298,54 +273,55 @@
         renderizarEstrategias();
         renderizarRecursos();
         
-        if (peiId) {
-          const peis = await listarPEIs(estudanteId);
-          const pei = peis.find(p => p.id == peiId);
-          if (pei) {
-            if (pei.atividades) pei.atividades.split('; ').forEach(a => atividadesSelecionadas.add(a));
-            if (pei.estrategias) pei.estrategias.split('; ').forEach(e => estrategiasSelecionadas.add(e));
-            if (pei.recursosAcessibilidade) pei.recursosAcessibilidade.split('; ').forEach(r => recursosSelecionados.add(r));
-            document.getElementById('materialApoio').value = pei.materialApoio || '';
-            document.getElementById('relatoAtendimento').value = pei.relatoAtendimento || '';
-            document.getElementById('peiId').value = pei.id;
+        if(peiId){
+          const peis=await listarPEIs(estudanteId);
+          const pei=peis.find(p=>p.id==peiId);
+          if(pei){
+            if(pei.atividades) pei.atividades.split('; ').forEach(a=>atividadesSelecionadas.add(a));
+            if(pei.estrategias) pei.estrategias.split('; ').forEach(e=>estrategiasSelecionadas.add(e));
+            if(pei.recursosAcessibilidade) pei.recursosAcessibilidade.split('; ').forEach(r=>recursosSelecionados.add(r));
+            document.getElementById('materialApoio').value=pei.materialApoio||'';
+            document.getElementById('relatoAtendimento').value=pei.relatoAtendimento||'';
+            document.getElementById('peiId').value=pei.id;
             renderizarAtividades();
             renderizarEstrategias();
             renderizarRecursos();
           }
         }
-      } catch (error) {
-        console.error('Erro:', error);
-        mostrarMensagem('Erro ao carregar dados', 'error');
-      } finally {
+      }catch(error){
+        console.error('Erro:',error);
+        mostrarMensagem('Erro ao carregar dados','error');
+      }finally{
         mostrarLoading(false);
         atualizarProgresso();
       }
     }
     
-    document.getElementById('formPEI').addEventListener('submit', async (e) => {
+    document.getElementById('formPEI').addEventListener('submit',async(e)=>{
       e.preventDefault();
-      const peiId = document.getElementById('peiId').value;
-      const dados = coletarDadosPEI();
-      if (!dados.objetivosEspecificos) {
-        mostrarMensagem('Selecione pelo menos um objetivo específico', 'warning');
+      const peiId=document.getElementById('peiId').value;
+      const dados=coletarDadosPEI();
+      console.log('📤 Enviando PEI:',dados);
+      if(!dados.objetivosEspecificos){
+        mostrarMensagem('Selecione pelo menos um objetivo específico','warning');
         return;
       }
       mostrarLoading(true);
-      try {
-        if (peiId) await atualizarPEI(peiId, dados);
+      try{
+        if(peiId) await atualizarPEI(peiId,dados);
         else await criarPEI(dados);
-        mostrarMensagem('PEI salvo com sucesso!', 'success');
-        setTimeout(() => window.location.href = `visualizar-pei.html?estudanteId=${dados.estudanteId}`, 1500);
-      } catch (error) {
-        console.error('Erro:', error);
-        mostrarMensagem('Erro ao salvar PEI', 'error');
-      } finally {
+        mostrarMensagem('PEI salvo com sucesso!','success');
+        setTimeout(()=>window.location.href=`visualizar-pei.html?estudanteId=${dados.estudanteId}`,1500);
+      }catch(error){
+        console.error('Erro:',error);
+        mostrarMensagem('Erro ao salvar PEI','error');
+      }finally{
         mostrarLoading(false);
       }
     });
     
-    document.getElementById('materialApoio').addEventListener('input', atualizarProgresso);
-    document.getElementById('relatoAtendimento').addEventListener('input', atualizarProgresso);
+    document.getElementById('materialApoio').addEventListener('input',atualizarProgresso);
+    document.getElementById('relatoAtendimento').addEventListener('input',atualizarProgresso);
     inicializar();
   </script>
 </body>
