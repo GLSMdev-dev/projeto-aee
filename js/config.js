@@ -1,5 +1,5 @@
 // ============================================
-// CONFIGURAÇÃO DO SISTEMA AEE
+// CONFIGURAÇÃO DO SISTEMA AEE - GitHub Pages
 // ============================================
 
 // URL do Web App (seu Apps Script)
@@ -16,6 +16,9 @@ const SHEETS_CONFIG = {
   // Sua API Key
   apiKey: 'AIzaSyACvSKy0LPzd7pA45HRK0Mv1ZS843FoaYM',
   
+  // Link público da planilha (para referência)
+  publicUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_xMy3mNYKEtHVe9zEthTPPi_LS7oUz6Z9pF53lDUkJXbLVEvjyPn__ubSH4Tde9jankHavQUVuVWv/pubhtml',
+  
   ranges: {
     estudantes: 'estudantes!A:I',
     peis: 'peis!A:J'
@@ -23,6 +26,6 @@ const SHEETS_CONFIG = {
 };
 
 // Flag para usar leitura via API (mais rápida) ou via Apps Script
-// TRUE = usa Google Sheets API (leitura mais rápida)
-// FALSE = usa Apps Script (leitura mais lenta)
+// TRUE = usa Google Sheets API (recomendado para GitHub Pages)
+// FALSE = usa Apps Script (fallback)
 const USAR_GOOGLE_SHEETS_API_PARA_LEITURA = true;
