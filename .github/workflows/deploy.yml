@@ -23,6 +23,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
+      - name: Generate config.js from template
+        run: |
+          # Gerar config.js substituindo placeholders pelos secrets
+          sed -e "s|{{API_URL}}|${{ secrets.API_URL }}|g" \
+              -e "s|{{DEPLOYMENT_ID}}|${{ secrets.DEPLOYMENT_ID }}|g" \
+              -e "s|{{SPREADSHEET_ID}}|${{ secrets.SPREADSHEET_ID }}|g" \
+              -e "s|{{API_KEY}}|${{ secrets.API_KEY }}|g" \
+              -e "s|{{PUBLIC_URL}}|${{ secrets.PUBLIC_URL }}|g" \
+              js/config.template.js > js/config.js
+          
+          echo "✅ config.js gerado com secrets"
+      
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
