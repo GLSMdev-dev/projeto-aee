@@ -6,69 +6,27 @@
   <title>Sistema AEE - Administrador</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .nav-tabs {
-      display: flex;
-      gap: 0.5rem;
-      border-bottom: 2px solid var(--gray-200);
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-    }
-    .nav-tab {
-      padding: 0.75rem 1.5rem;
-      cursor: pointer;
-      border: none;
-      background: none;
-      font-weight: 500;
-      color: var(--gray-600);
-      transition: var(--transition);
-    }
-    .nav-tab.active {
-      color: var(--primary);
-      border-bottom: 2px solid var(--primary);
-      margin-bottom: -2px;
-    }
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
-    .user-status-badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-    .status-active {
-      background: #d4edda;
-      color: #155724;
-    }
-    .status-inactive {
-      background: #f8d7da;
-      color: #721c24;
-    }
-    .perfil-badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      background: var(--primary-light);
-      color: var(--primary-dark);
-    }
+    .nav-tabs { display: flex; gap: 0.5rem; border-bottom: 2px solid var(--gray-200); margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .nav-tab { padding: 0.75rem 1.5rem; cursor: pointer; border: none; background: none; font-weight: 500; color: var(--gray-600); transition: var(--transition); }
+    .nav-tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); margin-bottom: -2px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .user-status-badge, .pei-status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
+    .status-active { background: #d4edda; color: #155724; }
+    .status-inactive { background: #f8d7da; color: #721c24; }
+    .status-ativo { background: #d4edda; color: #155724; }
+    .status-rascunho { background: #fff3cd; color: #856404; }
+    .status-arquivado { background: #e2e3e5; color: #383d41; }
+    .perfil-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; background: var(--primary-light); color: var(--primary-dark); }
+    .filters-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: flex-end; }
+    .filter-group { flex: 1; min-width: 150px; }
+    .filter-group label { display: block; font-size: 0.75rem; margin-bottom: 0.25rem; color: var(--gray-600); }
   </style>
 </head>
 <body>
   <div id="loading" class="loading"><div class="spinner"></div></div>
-
-  <nav class="navbar">
-    <h1>🏫 Sistema AEE - Administrador</h1>
-    <div class="nav-links">
-      <span style="color: white;">👤 <span id="userNome"></span></span>
-      <button id="btnLogout" class="btn btn-sm">Sair</button>
-    </div>
-  </nav>
-
+  <nav class="navbar"><h1>🏫 Sistema AEE - Administrador</h1><div class="nav-links"><span style="color:white;">👤 <span id="userNome"></span></span><button id="btnLogout" class="btn btn-sm">Sair</button></div></nav>
+  
   <div class="container">
     <div class="card">
       <div class="nav-tabs">
@@ -76,221 +34,69 @@
         <button class="nav-tab" data-tab="peis">📋 PEIs</button>
         <button class="nav-tab" data-tab="usuarios">👥 Usuários</button>
       </div>
-
-      <!-- Aba Estudantes -->
+      
       <div id="tab-estudantes" class="tab-content active">
-        <div class="card-header">
-          <h2>Gerenciar Estudantes</h2>
-          <button id="btnNovoEstudante" class="btn btn-primary">➕ Novo Estudante</button>
-        </div>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>Ações</th></tr>
-            </thead>
-            <tbody id="listaEstudantes"></tbody>
-          </table>
-        </div>
+        <div class="card-header"><h2>Gerenciar Estudantes</h2><button id="btnNovoEstudante" class="btn btn-primary">➕ Novo Estudante</button></div>
+        <div class="table-responsive"><table><thead><tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>Ações</th></tr></thead><tbody id="listaEstudantes"></tbody></table></div>
       </div>
-
-      <!-- Aba PEIs -->
+      
       <div id="tab-peis" class="tab-content">
-        <div class="card-header">
-          <h2>Planos Educacionais Individualizados</h2>
-          <div class="filters"><input type="text" id="filtroPEI" placeholder="Buscar por estudante..."></div>
+        <div class="card-header"><h2>Planos Educacionais Individualizados</h2></div>
+        <div class="filters-row">
+          <div class="filter-group"><input type="text" id="filtroPEI" placeholder="🔍 Buscar por estudante..."></div>
+          <div class="filter-group"><label>Status</label><select id="filtroStatus"><option value="todos">Todos</option><option value="ativo">Ativos</option><option value="rascunho">Rascunhos</option><option value="arquivado">Arquivados</option></select></div>
+          <div class="filter-group"><button id="btnFiltrarPEI" class="btn btn-secondary">🔍 Filtrar</button></div>
         </div>
-        <div class="table-responsive">
-          <table>
-            <thead><tr><th>Estudante</th><th>Data</th><th>Objetivos</th><th>Ações</th></tr></thead>
-            <tbody id="listaPEIs"></tbody>
-          </table>
-        </div>
+        <div class="table-responsive"><table><thead><tr><th>Estudante</th><th>Professor</th><th>Data</th><th>Status</th><th>Objetivos</th><th>Ações</th></tr></thead><tbody id="listaPEIs"></tbody></table></div>
       </div>
-
-      <!-- Aba Usuários -->
+      
       <div id="tab-usuarios" class="tab-content">
-        <div class="card-header">
-          <h2>Gerenciar Usuários</h2>
-          <button id="btnNovoUsuario" class="btn btn-primary">➕ Novo Usuário</button>
-        </div>
-        <div class="table-responsive">
-          <table>
-            <thead><tr><th>Nome</th><th>E-mail</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead>
-            <tbody id="listaUsuarios"></tbody>
-          </table>
-        </div>
+        <div class="card-header"><h2>Gerenciar Usuários</h2><button id="btnNovoUsuario" class="btn btn-primary">➕ Novo Usuário</button></div>
+        <div class="table-responsive"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody id="listaUsuarios"></tbody></table></div>
       </div>
     </div>
   </div>
-
+  
   <div id="modalConfirmacao" class="modal"><div class="modal-content"><div class="modal-header"><h3>Confirmar</h3><button class="btn btn-sm" onclick="fecharModal()">✕</button></div><p id="confirmacaoMensagem"></p><div class="modal-footer"><button id="cancelarBtn" class="btn">Cancelar</button><button id="confirmarBtn" class="btn btn-danger">Confirmar</button></div></div></div>
-
+  
   <script src="js/utils.js"></script>
   <script src="js/config.js"></script>
   <script src="js/api-netlify.js"></script>
   <script>
-    // ============================================
-    // FUNÇÕES AUXILIARES
-    // ============================================
-    function escapeHtml(texto) {
-      if (!texto) return '';
-      const div = document.createElement('div');
-      div.textContent = texto;
-      return div.innerHTML;
-    }
+    function escapeHtml(t){if(!t)return'';const e=document.createElement('div');return e.textContent=t,e.innerHTML}
+    function formatarData(t){if(!t)return'';const e=new Date(t);return isNaN(e.getTime())?t:e.toLocaleDateString('pt-BR')}
+    function fecharModal(){document.getElementById('modalConfirmacao').classList.remove('active')}
     
-    function formatarData(dataStr) {
-      if (!dataStr) return '';
-      const data = new Date(dataStr);
-      if (isNaN(data.getTime())) return dataStr;
-      return data.toLocaleDateString('pt-BR');
-    }
+    let currentUser=null,estudantes=[],peis=[],usuarios=[];
     
-    function fecharModal() {
-      document.getElementById('modalConfirmacao').classList.remove('active');
-    }
+    function verificarAuth(){const t=localStorage.getItem('user');if(!t){window.location.href='login.html';return null}const e=JSON.parse(t);if('adm'!==e.perfil){window.location.href='login.html';return null}return document.getElementById('userNome').textContent=e.nome,e}
     
-    // ============================================
-    // VARIÁVEIS GLOBAIS
-    // ============================================
-    let currentUser = null;
-    let estudantes = [];
-    let peis = [];
-    let usuarios = [];
-
-    // ============================================
-    // AUTENTICAÇÃO
-    // ============================================
-    function verificarAuth() {
-      const user = localStorage.getItem('user');
-      if (!user) { window.location.href = 'login.html'; return null; }
-      const userObj = JSON.parse(user);
-      if (userObj.perfil !== 'adm') { window.location.href = 'login.html'; return null; }
-      document.getElementById('userNome').textContent = userObj.nome;
-      return userObj;
-    }
-
-    // ============================================
-    // CRUD ESTUDANTES
-    // ============================================
-    async function carregarEstudantes() { 
-      estudantes = await listarEstudantes(); 
-      renderizarEstudantes(); 
-    }
+    async function carregarEstudantes(){estudantes=await listarEstudantes();renderizarEstudantes()}
+    async function carregarPEIs(){peis=await listarPEIs();renderizarPEIs()}
+    async function carregarUsuarios(){usuarios=await listarUsers();renderizarUsuarios()}
     
-    function renderizarEstudantes() {
-      const tbody = document.getElementById('listaEstudantes');
-      tbody.innerHTML = estudantes.map(e => `
-        <tr>
-          <td>${escapeHtml(e.matricula || '-')}</td>
-          <td>${escapeHtml(e.nome)}</td>
-          <td>${escapeHtml(e.anoEscolar || '-')}</td>
-          <td>${escapeHtml(e.turno || '-')}</td>
-          <td>${escapeHtml(e.deficiencia || '-')}</td>
-          <td>${escapeHtml(e.CID || '-')}</td>
-          <td class="acoes">
-            <button class="btn btn-sm btn-secondary" onclick="editarEstudante(${e.id})">✏️</button>
-            <button class="btn btn-sm btn-danger" onclick="excluirEstudante(${e.id})">🗑️</button>
-          </td>
-        </tr>
-      `).join('');
-    }
+    function renderizarEstudantes(){document.getElementById('listaEstudantes').innerHTML=estudantes.map(t=>`<tr><td>${escapeHtml(t.matricula||'-')}</td><td>${escapeHtml(t.nome)}</td><td>${escapeHtml(t.anoEscolar||'-')}</td><td>${escapeHtml(t.turno)}</td><td>${escapeHtml(t.deficiencia)}</td><td>${escapeHtml(t.CID||'-')}</td><td class="acoes"><button class="btn btn-sm btn-secondary" onclick="editarEstudante(${t.id})">✏️</button><button class="btn btn-sm btn-danger" onclick="excluirEstudante(${t.id})">🗑️</button></td></tr>`).join('')}
     
-    function editarEstudante(id) { window.location.href = `estudante.html?id=${id}`; }
+    function renderizarPEIs(){const t=document.getElementById('filtroPEI')?.value.toLowerCase()||'',e=document.getElementById('filtroStatus')?.value||'todos';const n=Object.fromEntries(estudantes.map(t=>[t.id,t.nome])),o=Object.fromEntries(usuarios.filter(t=>'professor'===t.perfil).map(t=>[t.id,t.nome]));let r=peis.filter(p=>!t||(n[p.estudanteId]||'').toLowerCase().includes(t));if('todos'!==e){r=r.filter(p=>p.status===e)}document.getElementById('listaPEIs').innerHTML=r.map(p=>{let t='';t='ativo'===p.status?'status-ativo':'rascunho'===p.status?'status-rascunho':'status-arquivado';return`<tr><td><strong>${escapeHtml(n[p.estudanteId]||'N/A')}</strong></td><td><span class="perfil-badge">${escapeHtml(o[p.professorId]||'Professor')}</span></td><td>${p.dataCriacao?p.dataCriacao.split(' ')[0]:'-'}</td><td><span class="pei-status-badge ${t}">${p.status||'ativo'}</span><select onchange="alterarStatusPEI(${p.id},this.value)" class="btn btn-sm" style="margin-left:0.5rem;"><option value="ativo">Ativo</option><option value="rascunho">Rascunho</option><option value="arquivado">Arquivado</option></select></td><td>${escapeHtml(p.objetivosGerais?.substring(0,50)||'')}...</td><td class="acoes"><button class="btn btn-sm btn-warning" onclick="verPEI(${p.id},${p.estudanteId})">👁️ Ver</button><button class="btn btn-sm btn-danger" onclick="excluirPEI(${p.id})">🗑️</button></td></tr>`}).join('')}
     
-    async function excluirEstudante(id) {
-      if (confirm('Excluir estudante?')) { 
-        await deletarEstudante(id); 
-        carregarEstudantes(); 
-      }
-    }
-
-    // ============================================
-    // CRUD PEIs
-    // ============================================
-    async function carregarPEIs() { 
-      peis = await listarPEIs(); 
-      renderizarPEIs(); 
-    }
+    function renderizarUsuarios(){document.getElementById('listaUsuarios').innerHTML=usuarios.map(t=>`<tr><td>${escapeHtml(t.nome)}</td><td>${escapeHtml(t.email)}</td><td>${escapeHtml(t.username)}</td><td><span class="perfil-badge">${t.perfil}</span></td><td><span class="user-status-badge ${'true'===t.activityStatus?'status-active':'status-inactive'}">${'true'===t.activityStatus?'Ativo':'Inativo'}</span></td><td class="acoes"><button class="btn btn-sm btn-secondary" onclick="editarUsuario(${t.id})">✏️</button><button class="btn btn-sm btn-danger" onclick="excluirUsuario(${t.id})">🗑️</button></td></tr>`).join('')}
     
-    function renderizarPEIs() {
-      const tbody = document.getElementById('listaPEIs');
-      const filtro = document.getElementById('filtroPEI')?.value.toLowerCase() || '';
-      const estudantesMap = Object.fromEntries(estudantes.map(e => [e.id, e.nome]));
-      const filtrados = peis.filter(p => (estudantesMap[p.estudanteId] || '').toLowerCase().includes(filtro));
-      tbody.innerHTML = filtrados.map(p => `
-        <tr>
-          <td>${escapeHtml(estudantesMap[p.estudanteId] || 'N/A')}</td>
-          <td>${formatarData(p.dataCriacao)}</td>
-          <td>${escapeHtml(p.objetivosGerais?.substring(0, 50) || '')}...</td>
-          <td class="acoes"><button class="btn btn-sm btn-warning" onclick="verPEI(${p.id}, ${p.estudanteId})">👁️ Ver</button></td>
-        </tr>
-      `).join('');
-    }
+    function editarEstudante(t){window.location.href=`estudante.html?id=${t}`}
+    async function excluirEstudante(t){if(confirm('Excluir estudante?')){await deletarEstudante(t);carregarEstudantes()}}
+    function editarUsuario(t){window.location.href=`usuario.html?id=${t}`}
+    async function excluirUsuario(t){if(confirm('Excluir usuário?')){await deletarUser(t);carregarUsuarios()}}
+    function verPEI(t,e){window.location.href=`visualizar-pei.html?peiId=${t}&estudanteId=${e}`}
+    async function excluirPEI(t){if(confirm('Excluir PEI?')){await deletarPEI(t);carregarPEIs()}}
+    async function alterarStatusPEI(t,e){await atualizarPEI(t,{status:e});carregarPEIs();mostrarMensagem(`Status alterado para ${e}`,'success')}
     
-    function verPEI(peiId, estudanteId) { window.location.href = `visualizar-pei.html?peiId=${peiId}&estudanteId=${estudanteId}`; }
-
-    // ============================================
-    // CRUD USUÁRIOS
-    // ============================================
-    async function carregarUsuarios() { 
-      usuarios = await listarUsers(); 
-      renderizarUsuarios(); 
-    }
+    document.querySelectorAll('.nav-tab').forEach(t=>{t.addEventListener('click',()=>{document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active')),document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active')),t.classList.add('active'),document.getElementById(`tab-${t.dataset.tab}`).classList.add('active');if('estudantes'===t.dataset.tab)carregarEstudantes();if('peis'===t.dataset.tab)carregarPEIs();if('usuarios'===t.dataset.tab)carregarUsuarios()})})
+    document.getElementById('btnNovoEstudante').onclick=()=>window.location.href='estudante.html'
+    document.getElementById('btnNovoUsuario').onclick=()=>window.location.href='usuario.html'
+    document.getElementById('btnLogout').onclick=()=>{localStorage.removeItem('user'),window.location.href='login.html'}
+    document.getElementById('btnFiltrarPEI')?.addEventListener('click',()=>renderizarPEIs())
+    document.getElementById('filtroPEI')?.addEventListener('input',()=>renderizarPEIs())
     
-    function renderizarUsuarios() {
-      const tbody = document.getElementById('listaUsuarios');
-      tbody.innerHTML = usuarios.map(u => `
-        <tr>
-          <td>${escapeHtml(u.nome)}</td>
-          <td>${escapeHtml(u.email)}</td>
-          <td>${escapeHtml(u.username)}</td>
-          <td><span class="perfil-badge">${u.perfil}</span></td>
-          <td><span class="user-status-badge ${u.activityStatus === 'true' ? 'status-active' : 'status-inactive'}">${u.activityStatus === 'true' ? 'Ativo' : 'Inativo'}</span></td>
-          <td class="acoes">
-            <button class="btn btn-sm btn-secondary" onclick="editarUsuario(${u.id})">✏️</button>
-            <button class="btn btn-sm btn-danger" onclick="excluirUsuario(${u.id})">🗑️</button>
-          </td>
-        </tr>
-      `).join('');
-    }
-    
-    function editarUsuario(id) { window.location.href = `usuario.html?id=${id}`; }
-    
-    async function excluirUsuario(id) { 
-      if (confirm('Excluir usuário?')) { 
-        await deletarUser(id); 
-        carregarUsuarios(); 
-      } 
-    }
-
-    // ============================================
-    // EVENTOS E INICIALIZAÇÃO
-    // ============================================
-    document.querySelectorAll('.nav-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
-        if (tab.dataset.tab === 'estudantes') carregarEstudantes();
-        if (tab.dataset.tab === 'peis') carregarPEIs();
-        if (tab.dataset.tab === 'usuarios') carregarUsuarios();
-      });
-    });
-
-    document.getElementById('btnNovoEstudante').onclick = () => window.location.href = 'estudante.html';
-    document.getElementById('btnNovoUsuario').onclick = () => window.location.href = 'usuario.html';
-    document.getElementById('filtroPEI')?.addEventListener('input', () => renderizarPEIs());
-    document.getElementById('btnLogout').onclick = () => { localStorage.removeItem('user'); window.location.href = 'login.html'; };
-
-    // Inicialização
-    currentUser = verificarAuth();
-    if (currentUser) { 
-      carregarEstudantes(); 
-      carregarPEIs(); 
-      carregarUsuarios(); 
-    }
+    currentUser=verificarAuth(),currentUser&&(carregarEstudantes(),carregarPEIs(),carregarUsuarios())
   </script>
 </body>
 </html>
