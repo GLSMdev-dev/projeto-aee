@@ -30,6 +30,7 @@
     .secao-pei h3 { background: var(--primary); color: white; padding: 0.6rem 1rem; border-radius: var(--border-radius); margin-bottom: 1rem; font-size: 1.1rem; }
     .secao-pei h4 { color: var(--secondary-dark); margin: 0.8rem 0 0.4rem; }
     .lista-conteudo { padding-left: 1.5rem; margin: 0.5rem 0; }
+    .lista-conteudo li { margin: 0.3rem 0; line-height: 1.4; }
     .badge-container { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
     .badge { background: var(--primary-light); color: var(--primary-dark); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; border: 1px solid var(--primary); }
     .texto-livre { background: var(--gray-100); padding: 1rem; border-radius: var(--border-radius); white-space: pre-wrap; border-left: 3px solid var(--secondary); }
@@ -140,11 +141,16 @@
           return;
         }
         
+        // Garantir que a data seja exibida corretamente
+        const dataPEI = peiAtual.dataCriacao && peiAtual.dataCriacao !== 'undefined' 
+          ? formatarData(peiAtual.dataCriacao) 
+          : new Date().toLocaleDateString('pt-BR');
+        
         const html = `
           <div class="pei-header">
             <h1>📋 Plano Educacional Individualizado</h1>
             <h2>Atendimento Educacional Especializado (AEE)</h2>
-            <p style="margin-top:0.5rem;color:#6c757d;">Data: ${formatarData(peiAtual.dataCriacao)}</p>
+            <p style="margin-top:0.5rem;color:#6c757d;">Data: ${dataPEI}</p>
           </div>
           
           <div class="info-escola">
@@ -169,14 +175,14 @@
           <div class="secao-pei">
             <h3>🎯 Objetivos do Plano</h3>
             <h4>Objetivos Gerais</h4>
-            ${formatarLista(peiAtual.objetivosGerais, false)}
+            ${formatarLista(peiAtual.objetivosGerais, true)}
             <h4>Objetivos Específicos</h4>
-            ${formatarLista(peiAtual.objetivosEspecificos)}
+            ${formatarLista(peiAtual.objetivosEspecificos, true)}
           </div>
           
           <div class="secao-pei">
             <h3>🎨 Atividades Desenvolvidas</h3>
-            ${formatarLista(peiAtual.atividades)}
+            ${formatarLista(peiAtual.atividades, true)}
           </div>
           
           <div class="secao-pei">
