@@ -1,8 +1,25 @@
 // ============================================
-// SISTEMA AEE - API OTIMIZADA
-// Leitura: Google Sheets API (rápido)
-// Escrita: Apps Script (lento, mas necessário)
+// SISTEMA AEE - API COMPLETA
 // ============================================
+
+// ============================================
+// FUNÇÕES DE COMUNICAÇÃO
+// ============================================
+
+async function chamarAppsScript(action, entity, dados = null, id = null) {
+  let url = `${API_URL}?action=${action}&entity=${entity}`;
+  if (id) url += `&id=${id}`;
+  if (dados) url += `&_data=${encodeURIComponent(JSON.stringify(dados))}`;
+  url += `&_=${Date.now()}`;
+  
+  try {
+    const response = await fetch(url);
+    return await response.json();
+  } catch (error) {
+    console.error('Erro:', error);
+    throw error;
+  }
+}
 
 // ============================================
 // LEITURA RÁPIDA (Google Sheets API)
@@ -10,7 +27,6 @@
 
 async function lerPlanilha(range) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_CONFIG.spreadsheetId}/values/${range}?key=${SHEETS_CONFIG.apiKey}`;
-  
   try {
     const response = await fetch(url);
     if (!response.ok) return [];
@@ -28,52 +44,28 @@ async function lerPlanilha(range) {
     }
     return registros;
   } catch (error) {
-    console.error('Erro na leitura rápida:', error);
+    console.error('Erro na leitura:', error);
     return [];
   }
 }
 
 // ============================================
-// ESCRITA (Apps Script - via fetch)
-// ============================================
-
-async function escreverAppsScript(action, caminho, dados = null, id = null) {
-  let url = `${API_URL}?action=${action}&caminho=${caminho}`;
-  if (id) url += `&id=${id}`;
-  if (dados) url += `&_data=${encodeURIComponent(JSON.stringify(dados))}`;
-  url += `&_=${Date.now()}`;
-  
-  try {
-    const response = await fetch(url);
-    return await response.json();
-  } catch (error) {
-    console.error('Erro na escrita:', error);
-    throw error;
-  }
-}
-
-// ============================================
-// CRUD ESTUDANTES (LEITURA RÁPIDA)
+// CRUD ESTUDANTES
 // ============================================
 
 async function listarEstudantes() {
-  mostrarLoading(true);
-  try {
-    const estudantes = await lerPlanilha(SHEETS_CONFIG.ranges.estudantes);
-    return estudantes;
-  } catch (error) {
-    console.error('Erro:', error);
-    return [];
-  } finally {
-    mostrarLoading(false);
+  if (USAR_LEITURA_RAPIDA) {
+    return await lerPlanilha(SHEETS_CONFIG.ranges.estudantes);
+  } else {
+    const resultado = await chamarAppsScript('listar', 'estudantes');
+    return resultado.dados || [];
   }
 }
 
 async function criarEstudante(estudante) {
   mostrarLoading(true);
   try {
-    console.log('📝 Criando estudante:', estudante.nome);
-    const resultado = await escreverAppsScript('criar', 'estudante', estudante);
+    const resultado = await chamarAppsScript('criar', 'estudante', estudante);
     mostrarMensagem('✅ Estudante cadastrado!', 'success');
     return resultado;
   } catch (error) {
@@ -87,7 +79,7 @@ async function criarEstudante(estudante) {
 async function atualizarEstudante(id, estudante) {
   mostrarLoading(true);
   try {
-    const resultado = await escreverAppsScript('atualizar', 'estudante', estudante, id);
+    const resultado = await chamarAppsScript('atualizar', 'estudante', estudante, id);
     mostrarMensagem('✅ Estudante atualizado!', 'success');
     return resultado;
   } catch (error) {
@@ -101,7 +93,7 @@ async function atualizarEstudante(id, estudante) {
 async function deletarEstudante(id) {
   mostrarLoading(true);
   try {
-    const resultado = await escreverAppsScript('deletar', 'estudante', null, id);
+    const resultado = await chamarAppsScript('deletar', 'estudante', null, id);
     mostrarMensagem('✅ Estudante excluído!', 'success');
     return resultado;
   } catch (error) {
@@ -113,29 +105,30 @@ async function deletarEstudante(id) {
 }
 
 // ============================================
-// CRUD PEIs (LEITURA RÁPIDA)
+// CRUD PEIs
 // ============================================
 
 async function listarPEIs(estudanteId = null) {
-  mostrarLoading(true);
-  try {
+  if (USAR_LEITURA_RAPIDA) {
     let peis = await lerPlanilha(SHEETS_CONFIG.ranges.peis);
     if (estudanteId) {
       peis = peis.filter(p => p.estudanteId == estudanteId);
     }
     return peis;
-  } catch (error) {
-    console.error('Erro:', error);
-    return [];
-  } finally {
-    mostrarLoading(false);
+  } else {
+    const resultado = await chamarAppsScript('listar', 'peis');
+    let peis = resultado.dados || [];
+    if (estudanteId) {
+      peis = peis.filter(p => p.estudanteId == estudanteId);
+    }
+    return peis;
   }
 }
 
 async function criarPEI(pei) {
   mostrarLoading(true);
   try {
-    const resultado = await escreverAppsScript('criar', 'pei', pei);
+    const resultado = await chamarAppsScript('criar', 'pei', pei);
     mostrarMensagem('✅ PEI criado!', 'success');
     return resultado;
   } catch (error) {
@@ -149,7 +142,7 @@ async function criarPEI(pei) {
 async function atualizarPEI(id, pei) {
   mostrarLoading(true);
   try {
-    const resultado = await escreverAppsScript('atualizar', 'pei', pei, id);
+    const resultado = await chamarAppsScript('atualizar', 'pei', pei, id);
     mostrarMensagem('✅ PEI atualizado!', 'success');
     return resultado;
   } catch (error) {
@@ -163,7 +156,7 @@ async function atualizarPEI(id, pei) {
 async function deletarPEI(id) {
   mostrarLoading(true);
   try {
-    const resultado = await escreverAppsScript('deletar', 'pei', null, id);
+    const resultado = await chamarAppsScript('deletar', 'pei', null, id);
     mostrarMensagem('✅ PEI excluído!', 'success');
     return resultado;
   } catch (error) {
@@ -172,6 +165,70 @@ async function deletarPEI(id) {
   } finally {
     mostrarLoading(false);
   }
+}
+
+// ============================================
+// CRUD USUÁRIOS
+// ============================================
+
+async function listar(entity) {
+  if (entity === 'users') {
+    const resultado = await chamarAppsScript('listar', 'users');
+    return resultado.dados || [];
+  }
+  return [];
+}
+
+async function criarUser(user) {
+  mostrarLoading(true);
+  try {
+    const resultado = await chamarAppsScript('criar', 'user', user);
+    mostrarMensagem('✅ Usuário criado!', 'success');
+    return resultado;
+  } catch (error) {
+    mostrarMensagem('❌ Erro ao criar usuário', 'error');
+    throw error;
+  } finally {
+    mostrarLoading(false);
+  }
+}
+
+async function atualizarUser(id, user) {
+  mostrarLoading(true);
+  try {
+    const resultado = await chamarAppsScript('atualizar', 'user', user, id);
+    mostrarMensagem('✅ Usuário atualizado!', 'success');
+    return resultado;
+  } catch (error) {
+    mostrarMensagem('❌ Erro ao atualizar usuário', 'error');
+    throw error;
+  } finally {
+    mostrarLoading(false);
+  }
+}
+
+async function deletarUser(id) {
+  mostrarLoading(true);
+  try {
+    const resultado = await chamarAppsScript('deletar', 'user', null, id);
+    mostrarMensagem('✅ Usuário excluído!', 'success');
+    return resultado;
+  } catch (error) {
+    mostrarMensagem('❌ Erro ao excluir usuário', 'error');
+    throw error;
+  } finally {
+    mostrarLoading(false);
+  }
+}
+
+// ============================================
+// LOGIN
+// ============================================
+
+async function fazerLoginAPI(username, senha) {
+  const url = `${API_URL}?action=login&_data=${encodeURIComponent(JSON.stringify({ username, senha }))}&_=${Date.now()}`;
+  const response = await fetch(url);
+  return await response.json();
 }
 
 // ============================================
@@ -185,26 +242,6 @@ async function verificarConexao() {
   } catch (error) {
     return false;
   }
-}
-// ============================================
-// FUNÇÕES PARA USUÁRIOS (ADMIN)
-// ============================================
-
-async function listarUsers() {
-  const resultado = await chamarAppsScript('listar', 'users');
-  return resultado.dados || [];
-}
-
-async function criarUser(user) {
-  return await chamarAppsScript('criar', 'user', user);
-}
-
-async function atualizarUser(id, user) {
-  return await chamarAppsScript('atualizar', 'user', user, id);
-}
-
-async function deletarUser(id) {
-  return await chamarAppsScript('deletar', 'user', null, id);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
