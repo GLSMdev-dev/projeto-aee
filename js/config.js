@@ -1,12 +1,12 @@
 // ============================================
-// CONFIGURAÇÃO DO SISTEMA AEE
+// CONFIGURAÇÃO DO SISTEMA AEE - VERSÃO FINAL
 // ============================================
 
-// URL do Web App (Apps Script - VERSÃO FINAL)
-const API_URL = 'https://script.google.com/macros/s/AKfycbwgf7IOPouerldwTSWRgQGX8H6aDmWtV2CYEgn6JHPg5RtBFD9Y7dm6B-vVvKIm8Nxi_A/exec';
+// URL do Web App (Apps Script)
+const API_URL = 'https://script.google.com/macros/s/AKfycbx_V_XghYTCgxC2Z8fKcp4LNz2fmmDiD9_IwSQfklksZNLTohA94YCpOeh4Eo8wkqqsrg/exec';
 
 // Código de implantação
-const DEPLOYMENT_ID = 'AKfycbwgf7IOPouerldwTSWRgQGX8H6aDmWtV2CYEgn6JHPg5RtBFD9Y7dm6B-vVvKIm8Nxi_A';
+const DEPLOYMENT_ID = 'AKfycbx_V_XghYTCgxC2Z8fKcp4LNz2fmmDiD9_IwSQfklksZNLTohA94YCpOeh4Eo8wkqqsrg';
 
 // Configuração para leitura direta via Google Sheets API
 const SHEETS_CONFIG = {
@@ -22,4 +22,4 @@ const SHEETS_CONFIG = {
 // Flag para usar leitura via API (mais rápida) ou via Apps Script
 const USAR_GOOGLE_SHEETS_API_PARA_LEITURA = true;
 
-console.log('✅ Configuração carregada');
+console.log('✅ Configuração carregada - Versão Final');
