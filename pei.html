@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="description" content="Sistema AEE - Criação de Plano Educacional Individualizado (PEI)">
+  <title>Sistema AEE - Criar PEI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .objetivo-card {
+      background: var(--gray-100);
+      border-radius: var(--border-radius);
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    
+    .objetivo-header {
+      background: var(--primary-light);
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+    
+    .objetivo-header:hover {
+      background: var(--gray-200);
+    }
+    
+    .objetivo-content {
+      padding: 1rem;
+      display: none;
+      border-top: 1px solid var(--gray-200);
+    }
+    
+    .objetivo-content.active {
+      display: block;
+    }
+    
+    .checkbox-group-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .checkbox-group-vertical label {
+      font-weight: normal;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+    
+    .checkbox-group-vertical input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    
+    .atividade-categoria {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--border-radius);
+      margin-bottom: 1rem;
+    }
+    
+    .atividade-categoria h4 {
+      background: var(--gray-200);
+      padding: 0.5rem 1rem;
+      margin: 0;
+      font-size: 0.9rem;
+    }
+    
+    .atividade-lista {
+      padding: 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .badge-atividade {
+      background: var(--primary-light);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid var(--primary);
+      color: var(--primary-dark);
+    }
+    
+    .badge-atividade.selected {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary-dark);
+    }
+    
+    .badge-atividade:hover {
+      transform: scale(1.02);
+      box-shadow: var(--shadow);
+    }
+    
+    .estrategia-grid, .recurso-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.5rem;
+    }
+    
+    .info-estudante {
+      background: var(--primary-light);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      margin-bottom: 1.5rem;
+    }
+    
+    .info-estudante h3 {
+      color: var(--primary-dark);
+      margin-bottom: 0.5rem;
+    }
+    
+    .info-estudante p {
+      margin: 0.25rem 0;
+    }
+    
+    .progresso {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--gray-200);
+      z-index: 1000;
+    }
+    
+    .progresso-bar {
+      height: 100%;
+      background: var(--secondary);
+      width: 0%;
+      transition: width 0.3s;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--gray-200);
+    }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+  </div>
+  
+  <div class="progresso">
+    <div class="progresso-bar" id="progressoBar"></div>
+  </div>
+  
+  <nav class="navbar">
+    <h1>🏫 Sistema AEE - PEI</h1>
+    <div class="nav-links">
+      <a href="index.html">← Voltar</a>
+    </div>
+  </nav>
+  
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h2>📋 Plano Educacional Individualizado (PEI)</h2>
+      </div>
+      
+      <div id="infoEstudante" class="info-estudante">
+        <h3>📌 Dados do Estudante</h3>
+        <div id="dadosEstudante">Carregando...</div>
+      </div>
+      
+      <form id="formPEI">
+        <input type="hidden" id="peiId" value="">
+        <input type="hidden" id="estudanteId" value="">
+        
+        <h3>🎯 1. Objetivos do Plano</h3>
+        <p class="mb-2">Selecione os objetivos gerais e, em seguida, marque os objetivos específicos desejados:</p>
+        <div id="objetivosContainer"></div>
+        
+        <h3 class="mt-3">🎨 2. Atividades Desenvolvidas</h3>
+        <p class="mb-2">Clique nas atividades para selecionar (múltipla escolha):</p>
+        <div id="atividadesContainer"></div>
+        
+        <h3 class="mt-3">⚙️ 3. Estratégias Pedagógicas</h3>
+        <p class="mb-2">Selecione as estratégias que serão utilizadas:</p>
+        <div id="estrategiasContainer" class="estrategia-grid"></div>
+        
+        <h3 class="mt-3">🛠️ 4. Recursos de Acessibilidade</h3>
+        <p class="mb-2">Selecione os recursos disponíveis:</p>
+        <div id="recursosContainer" class="recurso-grid"></div>
+        
+        <h3 class="mt-3">📦 5. Material de Apoio</h3>
+        <div class="form-group">
+          <textarea id="materialApoio" rows="3" placeholder="Descreva os materiais que serão utilizados..."></textarea>
+        </div>
+        
+        <h3 class="mt-3">📝 6. Relato do Atendimento</h3>
+        <div class="form-group">
+          <textarea id="relatoAtendimento" rows="4" placeholder="Registre as observações, progressos e ajustes necessários..."></textarea>
+        </div>
+        
+        <div class="btn-group">
+          <button type="button" class="btn" onclick="window.location.href='index.html'">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Salvar PEI</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script src="js/utils.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api-netlify.js"></script>
+  <script>
+    const OBJETIVOS = [
+      { id: 1, titulo: "Garantir o acesso, participação e aprendizagem do aluno na escola regular",
+        especificos: ["1.1 Assegurar que o estudante participe das atividades da sala comum com os apoios necessários.","1.2 Identificar e eliminar barreiras que dificultam a participação plena do aluno.","1.3 Adaptar atividades, materiais e avaliações conforme as necessidades do estudante.","1.4 Promover práticas pedagógicas inclusivas em articulação com a sala de aula regular.","1.5 Garantir ambientes acessíveis, organizados e adequados às características do aluno."] },
+      { id: 2, titulo: "Desenvolver a autonomia e a independência",
+        especificos: ["2.1 Estimular a tomada de decisões e a solução de problemas do cotidiano escolar.","2.2 Desenvolver habilidades funcionais necessárias à vida diária.","2.3 Favorecer o uso independente de recursos de comunicação e tecnologias assistivas.","2.4 Ampliar a capacidade de autorregulação emocional e comportamental.","2.5 Promover segurança, confiança e responsabilidade pessoal no ambiente escolar."] },
+      { id: 3, titulo: "Oferecer recursos, estratégias e adaptações que potencializem a aprendizagem",
+        especificos: ["3.1 Organizar materiais e recursos visuais, sonoros, táteis ou tecnológicos funcionais ao aluno.","3.2 Propor adaptações curriculares e metodológicas alinhadas às competências da BNCC.","3.3 Utilizar comunicação alternativa/aumentativa quando necessário.","3.4 Criar atividades diversificadas que favoreçam o estilo de aprendizagem do estudante.","3.5 Ensinar o uso de ferramentas de tecnologia assistiva (tablet, leitores de tela, pranchas etc.)."] },
+      { id: 4, titulo: "Ampliar habilidades cognitivas, comunicativas, motoras e socioemocionais",
+        especificos: ["4.1 Promover habilidades sociais, como cooperação, empatia e convivência.","4.2 Desenvolver atenção, memória, raciocínio lógico e organização mental.","4.3 Estimular expressão comunicativa oral, visual, gestual ou tátil.","4.4 Fortalecer coordenação motora ampla e fina por meio de atividades estruturadas.","4.5 Trabalhar reconhecimento e expressão adequada de emoções."] },
+      { id: 5, titulo: "Promover o desenvolvimento da comunicação e interação social",
+        especificos: ["5.1 Estimular trocas comunicativas significativas com professores e colegas.","5.2 Ensinar formas alternativas de comunicação quando necessário (LIBRAS, Braille, etc.).","5.3 Ampliar a participação do aluno em atividades coletivas e colaborativas."] },
+      { id: 6, titulo: "Apoiar o professor da sala regular no processo de inclusão",
+        especificos: ["6.1 Colaborar na elaboração de adaptações e flexibilizações curriculares.","6.2 Orientar sobre estratégias que facilitem o ensino para o aluno público-alvo da educação especial.","6.3 Compartilhar informações técnicas sobre o uso dos recursos do AEE.","6.4 Realizar reuniões sistemáticas para alinhamento pedagógico.","6.5 Acompanhar o desenvolvimento e fazer ajustes nas estratégias de inclusão."] },
+      { id: 7, titulo: "Oferecer suporte ao estudante na superação de barreiras",
+        especificos: ["7.1 Propor estratégias que minimizem impactos dessas barreiras no desempenho escolar.","7.2 Criar ambiente estruturado, previsível e seguro.","7.3 Atuar na prevenção de crises emocionais ou comportamentais.","7.4 Identificar dificuldades sensoriais, motoras, comportamentais ou cognitivas.","7.5 Desenvolver rotinas e pistas visuais que facilitem organização e orientação."] },
+      { id: 8, titulo: "Identificar e desenvolver potencialidades e talentos",
+        especificos: ["8.1 Mapear habilidades específicas, interesses e estilos de aprendizagem do aluno.","8.2 Propor atividades de enriquecimento curricular conforme suas potencialidades.","8.3 Criar desafios cognitivos e criativos para alunos com altas habilidades.","8.4 Valorizar conquistas individuais e coletivas do estudante.","8.5 Favorecer autoestima, motivação e engajamento por meio de experiências significativas."] },
+      { id: 9, titulo: "Garantir participação da família no processo educacional",
+        especificos: ["9.1 Manter comunicação contínua com responsáveis sobre avanços e dificuldades.","9.2 Orientar famílias sobre atividades que podem reforçar aprendizagens em casa.","9.3 Promover encontros e formações sobre inclusão e desenvolvimento.","9.4 Ouvir a família no processo de construção do PAEE/PEI.","9.5 Estabelecer parceria para apoio emocional, social e pedagógico do estudante."] },
+      { id: 10, titulo: "Assegurar o direito à educação inclusiva de qualidade",
+        especificos: ["10.1 Respeitar normas e princípios da educação inclusiva previstos em lei.","10.2 Promover ações de equidade, respeito e valorização da diversidade.","10.3 Garantir que o aluno tenha acesso a todos os espaços, atividades e projetos da escola.","10.4 Implementar práticas pedagógicas que favoreçam a aprendizagem significativa.","10.5 Monitorar constantemente o progresso do estudante e ajustar intervenções."] }
+    ];
+    
+    const ATIVIDADES = {
+      "Atividades Pedagógicas e Cognitivas": ["Resolução de problemas adaptados com apoio visual, concreto ou digital","Atividades de contagem com materiais manipuláveis","Classificação e categorização de objetos","Sequências lógicas com cartões estruturados","Mapas mentais acessíveis","Práticas de leitura funcional","Escrita assistida","Atividades de antecipação e organização"],
+      "Atividades de Comunicação": ["Construção de frases com CAA","Diálogos dirigidos com apoio de figuras","Jogos de turnos de fala","Nomeação e identificação de objetos","Leitura de palavras em Libras ou braille","Uso de expressões corporais"],
+      "Atividades de Interação Social": ["Jogos colaborativos adaptados","Rodas de conversa com suportes visuais","Pareamento com colega tutor","Atividades de cooperação","Situações sociais simuladas"]
+    };
+    
+    const ESTRATEGIAS = ["Mediação direta e modelagem","Repetição de instruções","Organização visual / tátil","Divisão da tarefa em etapas menores","Flexibilização das respostas esperadas","Reforço positivo imediato","Intervenção comportamental","Atividade multissensorial","Estratégias de alto desafio","Fortalecimento da autonomia","Pausas e tempo de autorregulação"];
+    
+    const RECURSOS = ["CAA (pranchas, símbolos)","Materiais táteis, braille","Libras / intérprete","Leitores de tela","Materiais adaptados","Recursos de mobilidade","Atenuação sensorial","Tecnologias digitais acessíveis","Recursos de alto estímulo"];
+    
+    let objetivosSelecionados = {};
+    let atividadesSelecionadas = new Set();
+    let estrategiasSelecionadas = new Set();
+    let recursosSelecionados = new Set();
+    
+    function renderizarObjetivos() {
+      const container = document.getElementById('objetivosContainer');
+      let html = '';
+      OBJETIVOS.forEach(objetivo => {
+        html += `<div class="objetivo-card"><div class="objetivo-header" onclick="toggleObjetivo(${objetivo.id})"><span>${objetivo.id}. ${objetivo.titulo}</span><span>▼</span></div><div class="objetivo-content" id="objetivoContent${objetivo.id}"><div class="checkbox-group-vertical">`;
+        objetivo.especificos.forEach((esp, idx) => {
+          html += `<label><input type="checkbox" data-objetivo="${objetivo.id}" data-especifico="${idx}" onchange="toggleObjetivoEspecifico(${objetivo.id}, ${idx}, this.checked)"> ${esp}</label>`;
+        });
+        html += `</div></div></div>`;
+      });
+      container.innerHTML = html;
+    }
+    
+    function toggleObjetivo(id) {
+      document.getElementById(`objetivoContent${id}`).classList.toggle('active');
+    }
+    
+    function toggleObjetivoEspecifico(objetivoId, especificoIdx, checked) {
+      if (!objetivosSelecionados[objetivoId]) objetivosSelecionados[objetivoId] = [];
+      if (checked) objetivosSelecionados[objetivoId].push(especificoIdx);
+      else objetivosSelecionados[objetivoId] = objetivosSelecionados[objetivoId].filter(i => i !== especificoIdx);
+      if (objetivosSelecionados[objetivoId].length === 0) delete objetivosSelecionados[objetivoId];
+      atualizarProgresso();
+    }
+    
+    function renderizarAtividades() {
+      const container = document.getElementById('atividadesContainer');
+      let html = '';
+      for (const [categoria, lista] of Object.entries(ATIVIDADES)) {
+        html += `<div class="atividade-categoria"><h4>${categoria}</h4><div class="atividade-lista">`;
+        lista.forEach(atividade => {
+          html += `<span class="badge-atividade ${atividadesSelecionadas.has(atividade) ? 'selected' : ''}" onclick="toggleAtividade('${escapeHtml(atividade).replace(/'/g, "\\'")}')">${escapeHtml(atividade)}</span>`;
+        });
+        html += `</div></div>`;
+      }
+      container.innerHTML = html;
+    }
+    
+    function toggleAtividade(atividade) {
+      if (atividadesSelecionadas.has(atividade)) atividadesSelecionadas.delete(atividade);
+      else atividadesSelecionadas.add(atividade);
+      renderizarAtividades();
+      atualizarProgresso();
+    }
+    
+    function renderizarEstrategias() {
+      const container = document.getElementById('estrategiasContainer');
+      let html = '';
+      ESTRATEGIAS.forEach(estrategia => {
+        html += `<label style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" ${estrategiasSelecionadas.has(estrategia) ? 'checked' : ''} onchange="toggleEstrategia('${escapeHtml(estrategia).replace(/'/g, "\\'")}', this.checked)"> ${escapeHtml(estrategia)}</label>`;
+      });
+      container.innerHTML = html;
+    }
+    
+    function toggleEstrategia(estrategia, checked) {
+      if (checked) estrategiasSelecionadas.add(estrategia);
+      else estrategiasSelecionadas.delete(estrategia);
+      atualizarProgresso();
+    }
+    
+    function renderizarRecursos() {
+      const container = document.getElementById('recursosContainer');
+      let html = '';
+      RECURSOS.forEach(recurso => {
+        html += `<label style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" ${recursosSelecionados.has(recurso) ? 'checked' : ''} onchange="toggleRecurso('${escapeHtml(recurso).replace(/'/g, "\\'")}', this.checked)"> ${escapeHtml(recurso)}</label>`;
+      });
+      container.innerHTML = html;
+    }
+    
+    function toggleRecurso(recurso, checked) {
+      if (checked) recursosSelecionados.add(recurso);
+      else recursosSelecionados.delete(recurso);
+      atualizarProgresso();
+    }
+    
+    function coletarDadosPEI() {
+      const objetivosEspecificos = [];
+      for (const [objetivoId, indices] of Object.entries(objetivosSelecionados)) {
+        const objetivo = OBJETIVOS.find(o => o.id == objetivoId);
+        if (objetivo) indices.forEach(idx => objetivosEspecificos.push(objetivo.especificos[idx]));
+      }
+      const objetivosGerais = Object.keys(objetivosSelecionados).map(id => {
+        const obj = OBJETIVOS.find(o => o.id == id);
+        return `${obj.id}. ${obj.titulo}`;
+      });
+      return {
+        estudanteId: document.getElementById('estudanteId').value,
+        objetivosGerais: objetivosGerais.join('; '),
+        objetivosEspecificos: objetivosEspecificos.join('; '),
+        atividades: Array.from(atividadesSelecionadas).join('; '),
+        estrategias: Array.from(estrategiasSelecionadas).join('; '),
+        recursosAcessibilidade: Array.from(recursosSelecionados).join('; '),
+        materialApoio: document.getElementById('materialApoio').value,
+        relatoAtendimento: document.getElementById('relatoAtendimento').value
+      };
+    }
+    
+    function atualizarProgresso() {
+      let preenchido = 0;
+      if (Object.keys(objetivosSelecionados).length > 0) preenchido++;
+      if (atividadesSelecionadas.size > 0) preenchido++;
+      if (estrategiasSelecionadas.size > 0) preenchido++;
+      if (recursosSelecionados.size > 0) preenchido++;
+      if (document.getElementById('materialApoio').value.trim()) preenchido++;
+      document.getElementById('progressoBar').style.width = `${(preenchido / 5) * 100}%`;
+    }
+    
+    function escapeHtml(texto) {
+      if (!texto) return '';
+      const div = document.createElement('div');
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+    
+    async function inicializar() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const estudanteId = urlParams.get('estudanteId');
+      const peiId = urlParams.get('peiId');
+      
+      if (!estudanteId) {
+        mostrarMensagem('Estudante não identificado', 'error');
+        setTimeout(() => window.location.href = 'index.html', 2000);
+        return;
+      }
+      
+      document.getElementById('estudanteId').value = estudanteId;
+      
+      mostrarLoading(true);
+      try {
+        const estudantes = await listarEstudantes();
+        const estudante = estudantes.find(e => e.id == estudanteId);
+        if (estudante) {
+          document.getElementById('dadosEstudante').innerHTML = `
+            <p><strong>Nome:</strong> ${escapeHtml(estudante.nome)}</p>
+            <p><strong>Data Nascimento:</strong> ${formatarData(estudante.dataNascimento)}</p>
+            <p><strong>Turno:</strong> ${escapeHtml(estudante.turno)}</p>
+            <p><strong>Deficiência:</strong> ${escapeHtml(estudante.deficiencia)}</p>
+            <p><strong>Responsáveis:</strong> ${escapeHtml(estudante.responsaveis)}</p>`;
+        }
+        renderizarObjetivos();
+        renderizarAtividades();
+        renderizarEstrategias();
+        renderizarRecursos();
+        
+        if (peiId) {
+          const peis = await listarPEIs(estudanteId);
+          const pei = peis.find(p => p.id == peiId);
+          if (pei) {
+            if (pei.atividades) pei.atividades.split('; ').forEach(a => atividadesSelecionadas.add(a));
+            if (pei.estrategias) pei.estrategias.split('; ').forEach(e => estrategiasSelecionadas.add(e));
+            if (pei.recursosAcessibilidade) pei.recursosAcessibilidade.split('; ').forEach(r => recursosSelecionados.add(r));
+            document.getElementById('materialApoio').value = pei.materialApoio || '';
+            document.getElementById('relatoAtendimento').value = pei.relatoAtendimento || '';
+            document.getElementById('peiId').value = pei.id;
+            renderizarAtividades();
+            renderizarEstrategias();
+            renderizarRecursos();
+          }
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        mostrarMensagem('Erro ao carregar dados', 'error');
+      } finally {
+        mostrarLoading(false);
+        atualizarProgresso();
+      }
+    }
+    
+    document.getElementById('formPEI').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const peiId = document.getElementById('peiId').value;
+      const dados = coletarDadosPEI();
+      if (!dados.objetivosEspecificos) {
+        mostrarMensagem('Selecione pelo menos um objetivo específico', 'warning');
+        return;
+      }
+      mostrarLoading(true);
+      try {
+        if (peiId) await atualizarPEI(peiId, dados);
+        else await criarPEI(dados);
+        mostrarMensagem('PEI salvo com sucesso!', 'success');
+        setTimeout(() => window.location.href = `visualizar-pei.html?estudanteId=${dados.estudanteId}`, 1500);
+      } catch (error) {
+        console.error('Erro:', error);
+        mostrarMensagem('Erro ao salvar PEI', 'error');
+      } finally {
+        mostrarLoading(false);
+      }
+    });
+    
+    document.getElementById('materialApoio').addEventListener('input', atualizarProgresso);
+    document.getElementById('relatoAtendimento').addEventListener('input', atualizarProgresso);
+    inicializar();
+  </script>
+</body>
+</html>
