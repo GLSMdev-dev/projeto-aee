@@ -18,6 +18,7 @@ const SHEETS_CONFIG = {
   ranges: {
     estudantes: 'estudantes!A:I',
     peis: 'peis!A:J'
+    users: 'users!A:G'
   }
 };
 
