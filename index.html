@@ -3,90 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <meta name="description" content="Sistema de Gestão AEE - Atendimento Educacional Especializado">
-  <title>Sistema AEE - PEI</title>
+  <title>Sistema AEE - Professor</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .filters-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .filter-group { flex: 1; min-width: 150px; }
+    .badge-pei { background: var(--primary-light); color: var(--primary-dark); padding: 0.25rem 0.5rem; border-radius: 20px; font-size: 0.75rem; }
+    .historico-pei { background: var(--gray-50); padding: 0.5rem; border-radius: var(--radius-sm); margin-top: 0.5rem; font-size: 0.75rem; }
+  </style>
 </head>
 <body>
-  <!-- Loading -->
-  <div id="loading" class="loading">
-    <div class="spinner"></div>
-  </div>
+  <div id="loading" class="loading"><div class="spinner"></div></div>
   
-  <!-- Modal de Confirmação -->
   <div id="modalConfirmacao" class="modal">
     <div class="modal-content">
-      <div class="modal-header">
-        <h3>Confirmar exclusão</h3>
-        <button class="btn btn-sm" onclick="fecharModalConfirmacao()">✕</button>
-      </div>
+      <div class="modal-header"><h3>Confirmar exclusão</h3><button class="btn btn-sm" onclick="fecharModalConfirmacao()">✕</button></div>
       <p id="confirmacaoMensagem">Tem certeza que deseja excluir este registro?</p>
-      <div class="modal-footer">
-        <button id="cancelarExclusao" class="btn">Cancelar</button>
-        <button id="confirmarExclusao" class="btn btn-danger">Excluir</button>
-      </div>
+      <div class="modal-footer"><button id="cancelarExclusao" class="btn">Cancelar</button><button id="confirmarExclusao" class="btn btn-danger">Excluir</button></div>
     </div>
   </div>
   
-  <!-- Navegação -->
   <nav class="navbar">
-    <h1>🏫 Sistema AEE - PEI</h1>
-    <div class="nav-links">
-      <a href="index.html">📋 Estudantes</a>
-      <a href="estudante.html" class="btn-primary btn">➕ Novo Estudante</a>
-    </div>
+    <h1>🏫 Sistema AEE - Professor</h1>
+    <div class="nav-links"><span style="color: white;">👤 <span id="userNome"></span></span><button id="btnLogout" class="btn btn-sm">Sair</button></div>
   </nav>
   
   <div class="container">
     <div class="card">
-      <div class="card-header">
-        <h2>📚 Lista de Estudantes</h2>
-        <div>
-          <button id="btnAtualizar" class="btn btn-secondary btn-sm">🔄 Atualizar</button>
-        </div>
+      <div class="card-header"><h2>📚 Meus Estudantes</h2><button id="btnAtualizar" class="btn btn-secondary btn-sm">🔄 Atualizar</button></div>
+      
+      <div class="filters-row">
+        <div class="filter-group"><input type="text" id="filtroNome" placeholder="🔍 Buscar por nome..."></div>
+        <div class="filter-group"><select id="filtroAno"><option value="">Todos os anos</option></select></div>
+        <div class="filter-group"><select id="filtroTurno"><option value="">Todos os turnos</option><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Noite">Noite</option><option value="Integral">Integral</option></select></div>
       </div>
       
-      <!-- Filtros -->
-      <div class="filters">
-        <div class="filter-group">
-          <input type="text" id="filtroNome" placeholder="🔍 Buscar por nome..." autocomplete="off">
-        </div>
-        <div class="filter-group">
-          <select id="filtroTurno">
-            <option value="">Todos os turnos</option>
-            <option value="Manhã">Manhã</option>
-            <option value="Tarde">Tarde</option>
-            <option value="Noite">Noite</option>
-            <option value="Integral">Integral</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <select id="filtroDeficiencia">
-            <option value="">Todas as deficiências</option>
-          </select>
-        </div>
-      </div>
-      
-      <!-- Tabela de Estudantes -->
       <div class="table-responsive">
-        <table id="tabelaEstudantes">
+          <table>
           <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Data Nasc.</th>
-              <th>Turno</th>
-              <th>Deficiência/Transtorno</th>
-              <th>Responsáveis</th>
-              <th>Contato</th>
-              <th>Ações</th>
-            </tr>
+              <tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>PEIs</th><th>Ações</th></tr>
           </thead>
-          <tbody id="listaEstudantes">
-            <tr>
-              <td colspan="7" class="text-center">Carregando estudantes...</td>
-            </tr>
+          <tbody id="listaEstudantes"><tr><td colspan="8" class="text-center">Carregando...</td></tr>
           </tbody>
-        </table>
+          </table>
       </div>
     </div>
   </div>
@@ -95,164 +54,32 @@
   <script src="js/config.js"></script>
   <script src="js/api-netlify.js"></script>
   <script>
-    // ============================================
-    // SISTEMA AEE - CRUD de Estudantes
-    // ============================================
+    function escapeHtml(t){if(!t)return'';const e=document.createElement('div');return e.textContent=t,e.innerHTML}
+    function formatarData(e){if(!e)return'';const t=new Date(e);return isNaN(t.getTime())?e:t.toLocaleDateString('pt-BR')}
+    function fecharModalConfirmacao(){document.getElementById('modalConfirmacao').classList.remove('active')}
     
-    let estudantesCache = [];
+    let estudantesCache=[], peisCache=[], currentUser=null;
     
-    // Escape HTML para segurança
-    function escapeHtml(texto) {
-      if (!texto) return '';
-      const div = document.createElement('div');
-      div.textContent = texto;
-      return div.innerHTML;
-    }
+    function verificarAuth(){const e=localStorage.getItem('user');if(!e){window.location.href='login.html';return null}const t=JSON.parse(e);document.getElementById('userNome').textContent=t.nome;return t}
     
-    // Fechar modal de confirmação
-    function fecharModalConfirmacao() {
-      const modal = document.getElementById('modalConfirmacao');
-      if (modal) modal.classList.remove('active');
-    }
+    async function carregarDados(){const e=document.getElementById('listaEstudantes');e.innerHTML='<tr><td colspan="8" class="text-center">Carregando...</td></tr>';try{estudantesCache=await listarEstudantes();peisCache=await listarPEIs();popularFiltros();aplicarFiltros()}catch(t){console.error(t),e.innerHTML='<tr><td colspan="8" class="text-center">❌ Erro ao carregar</td></tr>'}finally{mostrarLoading(false)}}
     
-    // Carregar lista de estudantes
-    async function carregarEstudantes() {
-      const tbody = document.getElementById('listaEstudantes');
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center">Carregando estudantes...</td></tr>';
-      
-      try {
-        estudantesCache = await listarEstudantes();
-        popularFiltroDeficiencias();
-        aplicarFiltros();
-        console.log(`${estudantesCache.length} estudantes carregados`);
-      } catch (error) {
-        console.error('Erro ao carregar estudantes:', error);
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">❌ Erro ao carregar estudantes. Tente novamente.</td></tr>';
-        mostrarMensagem('Erro ao carregar estudantes', 'error');
-      }
-    }
+    function popularFiltros(){const e=[...new Set(estudantesCache.map(e=>e.anoEscolar).filter(e=>e))];document.getElementById('filtroAno').innerHTML='<option value="">Todos os anos</option>'+e.map(e=>`<option value="${e}">${e}</option>`).join('')}
     
-    // Renderizar tabela
-    function renderizarEstudantes(estudantes) {
-      const tbody = document.getElementById('listaEstudantes');
-      
-      if (!estudantes || estudantes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">📭 Nenhum estudante cadastrado.</td></tr>';
-        return;
-      }
-      
-      tbody.innerHTML = estudantes.map(estudante => `
-        <tr>
-          <td><strong>${escapeHtml(estudante.nome || '')}</strong></td>
-          <td>${formatarData(estudante.dataNascimento)}</td>
-          <td>${escapeHtml(estudante.turno || '')}</td>
-          <td>${escapeHtml(estudante.deficiencia || '')}</td>
-          <td>${escapeHtml(estudante.responsaveis || '')}</td>
-          <td>${escapeHtml(estudante.contato || '')}</td>
-          <td class="acoes">
-            <button class="btn btn-sm btn-secondary" onclick="editarEstudante(${estudante.id})" title="Editar">✏️</button>
-            <button class="btn btn-sm btn-primary" onclick="criarPEI(${estudante.id})" title="Criar PEI">📄</button>
-            <button class="btn btn-sm btn-warning" onclick="visualizarPEI(${estudante.id})" title="Ver PEI">👁️</button>
-            <button class="btn btn-sm btn-danger" onclick="excluirEstudante(${estudante.id})" title="Excluir">🗑️</button>
-          </td>
-        </tr>
-      `).join('');
-    }
+    function renderizarEstudantes(e){const t=document.getElementById('listaEstudantes');if(!e||0===e.length){t.innerHTML='<tr><td colspan="8" class="text-center">📭 Nenhum estudante cadastrado</td></tr>';return}const n=peisCache.reduce((e,t)=>(e[t.estudanteId]=(e[t.estudanteId]||0)+1,e),{});t.innerHTML=e.map(e=>{const t=peisCache.filter(t=>t.estudanteId==e.id).map(e=>e.dataCriacao?.split(' ')[0]||'sem data').join(', ');return`<tr><td>${escapeHtml(e.matricula||'-')}</td><td><strong>${escapeHtml(e.nome)}</strong><div class="historico-pei">📅 ${t||'Nenhum PEI'}</div></td><td>${escapeHtml(e.anoEscolar||'-')}</td><td>${escapeHtml(e.turno)}</td><td>${escapeHtml(e.deficiencia)}</td><td>${escapeHtml(e.CID||'-')}</td><td><span class="badge-pei">${n[e.id]||0} PEI(s)</span></td><td class="acoes"><button class="btn btn-sm btn-primary" onclick="criarPEI(${e.id})">📄 Novo PEI</button><button class="btn btn-sm btn-warning" onclick="visualizarPEI(${e.id})">👁️ Ver PEIs</button></td></tr>`}).join('')}
     
-    // Aplicar filtros
-    function aplicarFiltros() {
-      const filtroNome = document.getElementById('filtroNome')?.value.toLowerCase() || '';
-      const filtroTurno = document.getElementById('filtroTurno')?.value || '';
-      const filtroDeficiencia = document.getElementById('filtroDeficiencia')?.value || '';
-      
-      let filtrados = [...estudantesCache];
-      
-      if (filtroNome) {
-        filtrados = filtrados.filter(e => e.nome?.toLowerCase().includes(filtroNome));
-      }
-      
-      if (filtroTurno) {
-        filtrados = filtrados.filter(e => e.turno === filtroTurno);
-      }
-      
-      if (filtroDeficiencia) {
-        filtrados = filtrados.filter(e => e.deficiencia === filtroDeficiencia);
-      }
-      
-      renderizarEstudantes(filtrados);
-    }
+    function aplicarFiltros(){const e=document.getElementById('filtroNome')?.value.toLowerCase()||'',t=document.getElementById('filtroAno')?.value||'',n=document.getElementById('filtroTurno')?.value||'';let o=[...estudantesCache];e&&(o=o.filter(t=>t.nome?.toLowerCase().includes(e))),t&&(o=o.filter(e=>e.anoEscolar===t)),n&&(o=o.filter(e=>e.turno===n)),renderizarEstudantes(o)}
     
-    // Popular filtro de deficiências
-    function popularFiltroDeficiencias() {
-      const deficiencias = [...new Set(estudantesCache.map(e => e.deficiencia).filter(d => d))];
-      const select = document.getElementById('filtroDeficiencia');
-      if (select) {
-        const opcoes = deficiencias.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
-        select.innerHTML = '<option value="">Todas as deficiências</option>' + opcoes;
-      }
-    }
+    function criarPEI(e){console.log('criarPEI chamado com ID:', e);if(!e||e===undefined){console.error('estudanteId inválido');return}window.location.href=`pei.html?estudanteId=${e}`}
+    function visualizarPEI(e){console.log('visualizarPEI chamado com ID:', e);if(!e||e===undefined){console.error('estudanteId inválido');return}window.location.href=`visualizar-pei.html?estudanteId=${e}`}
     
-    // Editar estudante
-    function editarEstudante(id) {
-      window.location.href = `estudante.html?id=${id}`;
-    }
+    document.getElementById('btnLogout').onclick=()=>{localStorage.removeItem('user'),window.location.href='login.html'}
+    document.getElementById('btnAtualizar').onclick=()=>carregarDados()
+    document.getElementById('filtroNome')?.addEventListener('input',debounce(aplicarFiltros,300))
+    document.getElementById('filtroAno')?.addEventListener('change',aplicarFiltros)
+    document.getElementById('filtroTurno')?.addEventListener('change',aplicarFiltros)
     
-    // Criar PEI
-    function criarPEI(estudanteId) {
-      window.location.href = `pei.html?estudanteId=${estudanteId}`;
-    }
-    
-    // Visualizar PEI
-    function visualizarPEI(estudanteId) {
-      window.location.href = `visualizar-pei.html?estudanteId=${estudanteId}`;
-    }
-    
-    // Excluir estudante
-    function excluirEstudante(id) {
-      const estudante = estudantesCache.find(e => e.id == id);
-      confirmarExclusao(`Tem certeza que deseja excluir ${estudante?.nome || 'este estudante'}? Esta ação também removerá todos os PEIs associados.`, async (confirmado) => {
-        if (confirmado) {
-          mostrarLoading(true);
-          try {
-            // Buscar e excluir PEIs associados
-            const peis = await listarPEIs(id);
-            for (const pei of peis) {
-              try {
-                await deletarPEI(pei.id);
-              } catch (e) {
-                console.warn('Erro ao excluir PEI:', e);
-              }
-            }
-            
-            // Excluir estudante
-            await deletarEstudante(id);
-            mostrarMensagem('Estudante excluído com sucesso!', 'success');
-            await carregarEstudantes();
-          } catch (error) {
-            console.error('Erro ao excluir:', error);
-            mostrarMensagem('Erro ao excluir estudante', 'error');
-          } finally {
-            mostrarLoading(false);
-          }
-        }
-      });
-    }
-    
-    // Inicialização
-    document.addEventListener('DOMContentLoaded', () => {
-      carregarEstudantes();
-      
-      // Event listeners dos filtros
-      const filtroNome = document.getElementById('filtroNome');
-      const filtroTurno = document.getElementById('filtroTurno');
-      const filtroDeficiencia = document.getElementById('filtroDeficiencia');
-      const btnAtualizar = document.getElementById('btnAtualizar');
-      
-      if (filtroNome) filtroNome.addEventListener('input', debounce(aplicarFiltros, 300));
-      if (filtroTurno) filtroTurno.addEventListener('change', aplicarFiltros);
-      if (filtroDeficiencia) filtroDeficiencia.addEventListener('change', aplicarFiltros);
-      if (btnAtualizar) btnAtualizar.addEventListener('click', carregarEstudantes);
-    });
+    currentUser=verificarAuth(),currentUser&&carregarDados()
   </script>
 </body>
 </html>
