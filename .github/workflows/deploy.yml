@@ -1,0 +1,62 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Create config.js from template
+        run: |
+          echo "🔧 Gerando config.js a partir do template..."
+          cp js/config-template.js js/config.js
+          sed -i "s|{{API_URL}}|${{ secrets.API_URL }}|g" js/config.js
+          sed -i "s|{{DEPLOYMENT_ID}}|${{ secrets.DEPLOYMENT_ID }}|g" js/config.js
+          sed -i "s|{{SPREADSHEET_ID}}|${{ secrets.SPREADSHEET_ID }}|g" js/config.js
+          sed -i "s|{{API_KEY}}|${{ secrets.API_KEY }}|g" js/config.js
+          sed -i "s|{{PUBLIC_URL}}|${{ secrets.PUBLIC_URL }}|g" js/config.js
+          echo "✅ config.js gerado!"
+      
+      - name: Verify config.js
+        run: |
+          if [ -f "js/config.js" ]; then
+            echo "✅ js/config.js existe"
+            if grep -q "{{" js/config.js; then
+              echo "⚠️ Placeholders não substituídos!"
+              exit 1
+            else
+              echo "✅ Todos os placeholders foram substituídos"
+            fi
+          else
+            echo "❌ js/config.js não encontrado!"
+            exit 1
+          fi
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
