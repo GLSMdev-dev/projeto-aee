@@ -65,6 +65,7 @@
       <form id="formPEI">
         <input type="hidden" id="peiId" value="">
         <input type="hidden" id="estudanteId" value="">
+        <input type="hidden" id="professorId" value="">
         
         <h3>🎯 1. Objetivos do Plano</h3>
         <p class="mb-2">Selecione os objetivos gerais e, em seguida, marque os objetivos específicos desejados:</p>
@@ -237,6 +238,7 @@
       });
       return {
         estudanteId: document.getElementById('estudanteId').value,
+        professorId: document.getElementById('professorId').value,
         objetivosGerais: objetivosGerais.join('; '),
         objetivosEspecificos: objetivosEspecificos.join('; '),
         atividades: Array.from(atividadesSelecionadas).join('; '),
@@ -266,6 +268,12 @@
         mostrarMensagem('Estudante não identificado', 'error');
         setTimeout(() => window.location.href = 'index.html', 2000);
         return;
+      }
+      
+      // Carregar professorId do localStorage
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user) {
+        document.getElementById('professorId').value = user.id;
       }
       
       document.getElementById('estudanteId').value = estudanteId;
