@@ -31,16 +31,18 @@ jobs:
         run: |
           echo "🔧 Gerando config.js..."
           
-          # Verificar se o template existe
-          if [ ! -f "js/config.template.js" ]; then
-            echo "❌ js/config.template.js não encontrado!"
+          # Verificar se o template existe (nome correto: config-template.js)
+          if [ ! -f "js/config-template.js" ]; then
+            echo "❌ js/config-template.js não encontrado!"
             echo "Arquivos em js/:"
             ls -la js/
             exit 1
           fi
           
-          # Gerar config.js
-          cat js/config.template.js | \
+          echo "✅ Template encontrado. Gerando config.js..."
+          
+          # Gerar config.js substituindo placeholders
+          cat js/config-template.js | \
             sed "s|{{API_URL}}|${API_URL}|g" | \
             sed "s|{{DEPLOYMENT_ID}}|${DEPLOYMENT_ID}|g" | \
             sed "s|{{SPREADSHEET_ID}}|${SPREADSHEET_ID}|g" | \
