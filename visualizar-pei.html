@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="description" content="Sistema AEE - Visualização do Plano Educacional Individualizado (PEI)">
   <title>Sistema AEE - Visualizar PEI</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -44,7 +45,7 @@
   
   <nav class="navbar no-print">
     <h1>🏫 Sistema AEE - PEI</h1>
-    <div class="nav-links"><a href="index.html">← Voltar</a></div>
+    <div class="nav-links"><a href="javascript:history.back()">← Voltar</a></div>
   </nav>
   
   <div class="container">
@@ -64,12 +65,9 @@
   <script src="js/api-netlify.js"></script>
   <script src="js/pdf.js"></script>
   <script>
-    let peiAtual = null, estudanteAtual = null;
-    
-    function getUrlParameter(name) {
-      return new URLSearchParams(window.location.search).get(name);
-    }
-    
+    // ============================================
+    // FUNÇÕES AUXILIARES
+    // ============================================
     function escapeHtml(texto) {
       if (!texto) return '';
       const div = document.createElement('div');
@@ -77,14 +75,36 @@
       return div.innerHTML;
     }
     
+    function formatarData(dataStr) {
+      if (!dataStr) return '';
+      const data = new Date(dataStr);
+      if (isNaN(data.getTime())) return dataStr;
+      return data.toLocaleDateString('pt-BR');
+    }
+    
+    function getUrlParameter(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+    
     function formatarLista(texto, isLista = true) {
       if (!texto) return isLista ? '<em>Não informado</em>' : 'Não informado';
       const itens = texto.split('; ').filter(item => item.trim());
       if (itens.length === 0) return isLista ? '<em>Não informado</em>' : 'Não informado';
-      if (isLista) return `<ul class="lista-conteudo">${itens.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+      if (isLista) {
+        return `<ul class="lista-conteudo">${itens.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+      }
       return `<div class="badge-container">${itens.map(item => `<span class="badge">${escapeHtml(item)}</span>`).join('')}</div>`;
     }
     
+    // ============================================
+    // VARIÁVEIS GLOBAIS
+    // ============================================
+    let peiAtual = null;
+    let estudanteAtual = null;
+    
+    // ============================================
+    // RENDERIZAR PEI
+    // ============================================
     async function renderizarPEI(estudanteId, peiId = null) {
       mostrarLoading(true);
       try {
@@ -93,66 +113,138 @@
         if (!estudanteAtual) throw new Error('Estudante não encontrado');
         
         const peis = await listarPEIs(estudanteId);
-        if (peiId) peiAtual = peis.find(p => p.id == peiId);
-        else if (peis.length > 0) peiAtual = peis[peis.length - 1];
+        if (peiId) {
+          peiAtual = peis.find(p => p.id == peiId);
+        } else if (peis.length > 0) {
+          peiAtual = peis[peis.length - 1];
+        }
         
         if (!peiAtual) {
           document.getElementById('peiContainer').innerHTML = `
             <div class="pei-header"><h1>📋 Plano Educacional Individualizado</h1><h2>Atendimento Educacional Especializado (AEE)</h2></div>
-            <div class="info-escola"><strong>Escola Municipal/Estadual</strong><br>Educação Inclusiva - AEE</div>
-            <div class="info-estudante-card"><h3>📌 Dados do Estudante</h3><div class="grid-info">
-              <div><span class="info-label">Nome</span><div class="info-value">${escapeHtml(estudanteAtual.nome)}</div></div>
-              <div><span class="info-label">Data Nascimento</span><div class="info-value">${formatarData(estudanteAtual.dataNascimento)}</div></div>
-              <div><span class="info-label">Turno</span><div class="info-value">${escapeHtml(estudanteAtual.turno)}</div></div>
-              <div><span class="info-label">Deficiência</span><div class="info-value">${escapeHtml(estudanteAtual.deficiencia)}</div></div>
-              <div><span class="info-label">Responsáveis</span><div class="info-value">${escapeHtml(estudanteAtual.responsaveis)}</div></div>
-              <div><span class="info-label">Contato</span><div class="info-value">${escapeHtml(estudanteAtual.contato)}</div></div>
-            </div></div>
+            <div class="info-escola"><strong>Secretaria Municipal/Estadual de Educação</strong><br>Educação Inclusiva - AEE</div>
+            <div class="info-estudante-card">
+              <h3>📌 Dados do Estudante</h3>
+              <div class="grid-info">
+                <div><span class="info-label">Nome</span><div class="info-value">${escapeHtml(estudanteAtual.nome)}</div></div>
+                <div><span class="info-label">Matrícula</span><div class="info-value">${escapeHtml(estudanteAtual.matricula || '-')}</div></div>
+                <div><span class="info-label">Data Nascimento</span><div class="info-value">${formatarData(estudanteAtual.dataNascimento)}</div></div>
+                <div><span class="info-label">Turno</span><div class="info-value">${escapeHtml(estudanteAtual.turno)}</div></div>
+                <div><span class="info-label">Ano Escolar</span><div class="info-value">${escapeHtml(estudanteAtual.anoEscolar || '-')}</div></div>
+                <div><span class="info-label">Deficiência</span><div class="info-value">${escapeHtml(estudanteAtual.deficiencia)}</div></div>
+                <div><span class="info-label">CID</span><div class="info-value">${escapeHtml(estudanteAtual.CID || '-')}</div></div>
+              </div>
+              ${estudanteAtual.descricao ? `<div style="margin-top:1rem;"><span class="info-label">Observações</span><p>${escapeHtml(estudanteAtual.descricao)}</p></div>` : ''}
+            </div>
             <div class="secao-pei"><h3>⚠️ Nenhum PEI Encontrado</h3><p style="text-align:center;padding:2rem;">Não há Plano Educacional Individualizado cadastrado.<br><br><a href="pei.html?estudanteId=${estudanteId}" class="btn btn-primary">➕ Criar PEI agora</a></p></div>`;
           return;
         }
         
         const html = `
-          <div class="pei-header"><h1>📋 Plano Educacional Individualizado</h1><h2>Atendimento Educacional Especializado (AEE)</h2><p style="margin-top:0.5rem;color:#6c757d;">Data: ${formatarData(peiAtual.dataCriacao)}</p></div>
-          <div class="info-escola"><strong>Secretaria Municipal/Estadual de Educação</strong><br>Educação Inclusiva - AEE - PEI</div>
-          <div class="info-estudante-card"><h3>📌 Dados do Estudante</h3><div class="grid-info">
-            <div><span class="info-label">Nome</span><div class="info-value">${escapeHtml(estudanteAtual.nome)}</div></div>
-            <div><span class="info-label">Data Nascimento</span><div class="info-value">${formatarData(estudanteAtual.dataNascimento)}</div></div>
-            <div><span class="info-label">Turno</span><div class="info-value">${escapeHtml(estudanteAtual.turno)}</div></div>
-            <div><span class="info-label">Deficiência</span><div class="info-value">${escapeHtml(estudanteAtual.deficiencia)}</div></div>
-            <div><span class="info-label">Responsáveis</span><div class="info-value">${escapeHtml(estudanteAtual.responsaveis)}</div></div>
-            <div><span class="info-label">Contato</span><div class="info-value">${escapeHtml(estudanteAtual.contato)}</div></div>
-          </div>${estudanteAtual.descricao ? `<div style="margin-top:1rem;"><span class="info-label">Observações</span><p>${escapeHtml(estudanteAtual.descricao)}</p></div>` : ''}</div>
-          <div class="secao-pei"><h3>🎯 Objetivos do Plano</h3><h4>Objetivos Gerais</h4>${formatarLista(peiAtual.objetivosGerais, false)}<h4>Objetivos Específicos</h4>${formatarLista(peiAtual.objetivosEspecificos)}</div>
-          <div class="secao-pei"><h3>🎨 Atividades Desenvolvidas</h3>${formatarLista(peiAtual.atividades)}</div>
-          <div class="secao-pei"><h3>⚙️ Estratégias Pedagógicas</h3>${formatarLista(peiAtual.estrategias, false)}</div>
-          <div class="secao-pei"><h3>🛠️ Recursos de Acessibilidade</h3>${formatarLista(peiAtual.recursosAcessibilidade, false)}</div>
-          ${peiAtual.materialApoio ? `<div class="secao-pei"><h3>📦 Material de Apoio</h3><div class="texto-livre">${escapeHtml(peiAtual.materialApoio).replace(/\n/g, '<br>')}</div></div>` : ''}
-          ${peiAtual.relatoAtendimento ? `<div class="secao-pei"><h3>📝 Relato do Atendimento</h3><div class="texto-livre">${escapeHtml(peiAtual.relatoAtendimento).replace(/\n/g, '<br>')}</div></div>` : ''}
-          <div style="margin-top:2rem;padding-top:1rem;border-top:1px solid #dee2e6;text-align:center;font-size:0.8rem;"><p>Professor(a) responsável: _________________________</p></div>`;
+          <div class="pei-header">
+            <h1>📋 Plano Educacional Individualizado</h1>
+            <h2>Atendimento Educacional Especializado (AEE)</h2>
+            <p style="margin-top:0.5rem;color:#6c757d;">Data: ${formatarData(peiAtual.dataCriacao)}</p>
+          </div>
+          
+          <div class="info-escola">
+            <strong>Secretaria Municipal/Estadual de Educação</strong><br>
+            Educação Inclusiva - AEE - PEI
+          </div>
+          
+          <div class="info-estudante-card">
+            <h3>📌 Dados do Estudante</h3>
+            <div class="grid-info">
+              <div><span class="info-label">Nome</span><div class="info-value">${escapeHtml(estudanteAtual.nome)}</div></div>
+              <div><span class="info-label">Matrícula</span><div class="info-value">${escapeHtml(estudanteAtual.matricula || '-')}</div></div>
+              <div><span class="info-label">Data Nascimento</span><div class="info-value">${formatarData(estudanteAtual.dataNascimento)}</div></div>
+              <div><span class="info-label">Turno</span><div class="info-value">${escapeHtml(estudanteAtual.turno)}</div></div>
+              <div><span class="info-label">Ano Escolar</span><div class="info-value">${escapeHtml(estudanteAtual.anoEscolar || '-')}</div></div>
+              <div><span class="info-label">Deficiência</span><div class="info-value">${escapeHtml(estudanteAtual.deficiencia)}</div></div>
+              <div><span class="info-label">CID</span><div class="info-value">${escapeHtml(estudanteAtual.CID || '-')}</div></div>
+            </div>
+            ${estudanteAtual.descricao ? `<div style="margin-top:1rem;"><span class="info-label">Observações</span><p>${escapeHtml(estudanteAtual.descricao)}</p></div>` : ''}
+          </div>
+          
+          <div class="secao-pei">
+            <h3>🎯 Objetivos do Plano</h3>
+            <h4>Objetivos Gerais</h4>
+            ${formatarLista(peiAtual.objetivosGerais, false)}
+            <h4>Objetivos Específicos</h4>
+            ${formatarLista(peiAtual.objetivosEspecificos)}
+          </div>
+          
+          <div class="secao-pei">
+            <h3>🎨 Atividades Desenvolvidas</h3>
+            ${formatarLista(peiAtual.atividades)}
+          </div>
+          
+          <div class="secao-pei">
+            <h3>⚙️ Estratégias Pedagógicas</h3>
+            ${formatarLista(peiAtual.estrategias, false)}
+          </div>
+          
+          <div class="secao-pei">
+            <h3>🛠️ Recursos de Acessibilidade</h3>
+            ${formatarLista(peiAtual.recursosAcessibilidade, false)}
+          </div>
+          
+          ${peiAtual.materialApoio ? `
+          <div class="secao-pei">
+            <h3>📦 Material de Apoio</h3>
+            <div class="texto-livre">${escapeHtml(peiAtual.materialApoio).replace(/\n/g, '<br>')}</div>
+          </div>
+          ` : ''}
+          
+          ${peiAtual.relatoAtendimento ? `
+          <div class="secao-pei">
+            <h3>📝 Relato do Atendimento</h3>
+            <div class="texto-livre">${escapeHtml(peiAtual.relatoAtendimento).replace(/\n/g, '<br>')}</div>
+          </div>
+          ` : ''}
+          
+          <div style="margin-top:2rem;padding-top:1rem;border-top:1px solid #dee2e6;text-align:center;font-size:0.8rem;">
+            <p>Professor(a) responsável: _________________________</p>
+          </div>
+        `;
         document.getElementById('peiContainer').innerHTML = html;
       } catch (error) {
         console.error('Erro:', error);
         document.getElementById('peiContainer').innerHTML = `<div class="pei-header"><h1>❌ Erro</h1></div><div class="text-center" style="padding:2rem;color:var(--danger);">${error.message}</div>`;
-      } finally { mostrarLoading(false); }
+      } finally { 
+        mostrarLoading(false); 
+      }
     }
     
+    // ============================================
+    // INICIALIZAÇÃO
+    // ============================================
     async function inicializar() {
       const estudanteId = getUrlParameter('estudanteId');
       const peiId = getUrlParameter('peiId');
+      
       if (!estudanteId) {
         mostrarMensagem('Estudante não identificado', 'error');
         setTimeout(() => window.location.href = 'index.html', 2000);
         return;
       }
+      
       await renderizarPEI(estudanteId, peiId);
-      document.getElementById('btnEditarPEI')?.addEventListener('click', () => window.location.href = `pei.html?estudanteId=${estudanteId}&peiId=${peiAtual?.id || ''}`);
-      document.getElementById('btnImprimir')?.addEventListener('click', () => imprimirPEI());
+      
+      document.getElementById('btnEditarPEI')?.addEventListener('click', () => {
+        window.location.href = `pei.html?estudanteId=${estudanteId}&peiId=${peiAtual?.id || ''}`;
+      });
+      
+      document.getElementById('btnImprimir')?.addEventListener('click', () => {
+        imprimirPEI();
+      });
+      
       document.getElementById('btnGerarPDF')?.addEventListener('click', () => {
         const nome = estudanteAtual?.nome?.replace(/\s+/g, '_') || 'estudante';
         gerarPDF('peiParaImpressao', `PEI_${nome}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`);
       });
     }
+    
     inicializar();
   </script>
 </body>
