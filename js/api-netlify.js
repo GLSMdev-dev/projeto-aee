@@ -243,6 +243,19 @@ async function verificarConexao() {
     return false;
   }
 }
+// ============================================
+// FUNÇÕES ESPECÍFICAS PARA USUÁRIOS
+// ============================================
+
+async function listarUsers() {
+  const resultado = await chamarAppsScript('listar', 'users');
+  return resultado.dados || [];
+}
+
+async function listarProfessores() {
+  const users = await listarUsers();
+  return users.filter(u => u.perfil === 'professor' && u.activityStatus === 'true');
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🔍 Verificando conexão...');
