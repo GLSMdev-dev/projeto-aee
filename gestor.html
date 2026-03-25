@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema AEE - Gestor</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .filters-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .filter-group {
+      flex: 1;
+      min-width: 150px;
+    }
+    .stats-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--gray-600);
+    }
+    .badge-professor {
+      background: var(--secondary-light);
+      color: var(--secondary-dark);
+      padding: 0.25rem 0.5rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading"><div class="spinner"></div></div>
+
+  <nav class="navbar">
+    <h1>🏫 Sistema AEE - Gestor</h1>
+    <div class="nav-links">
+      <span style="color: white;">👤 <span id="userNome"></span></span>
+      <button id="btnLogout" class="btn btn-sm">Sair</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Cards de estatísticas -->
+    <div class="stats-cards">
+      <div class="stat-card"><div class="stat-number" id="totalEstudantes">0</div><div class="stat-label">Total de Estudantes</div></div>
+      <div class="stat-card"><div class="stat-number" id="totalPEIs">0</div><div class="stat-label">PEIs Criados</div></div>
+      <div class="stat-card"><div class="stat-number" id="totalProfessores">0</div><div class="stat-label">Professores Ativos</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>📚 Estudantes Cadastrados</h2>
+        <button id="btnNovoEstudante" class="btn btn-primary">➕ Novo Estudante</button>
+      </div>
+      
+      <div class="filters-row">
+        <div class="filter-group"><input type="text" id="filtroNome" placeholder="🔍 Buscar por nome..."></div>
+        <div class="filter-group"><select id="filtroAno"><option value="">Todos os anos</option></select></div>
+        <div class="filter-group"><select id="filtroTurno"><option value="">Todos os turnos</option><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Noite">Noite</option><option value="Integral">Integral</option></select></div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead><tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>PEIs</th><th>Ações</th></tr></thead>
+          <tbody id="listaEstudantes"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2>📋 Planos Educacionais Individualizados</h2></div>
+      <div class="filters-row"><div class="filter-group"><input type="text" id="filtroPEI" placeholder="🔍 Buscar por estudante ou professor..."></div></div>
+      <div class="table-responsive">
+        <table>
+          <thead><tr><th>Estudante</th><th>Professor</th><th>Data</th><th>Objetivos</th><th>Ações</th></tr></thead>
+          <tbody id="listaPEIs"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalConfirmacao" class="modal"><div class="modal-content"><div class="modal-header"><h3>Confirmar</h3><button class="btn btn-sm" onclick="fecharModal()">✕</button></div><p id="confirmacaoMensagem"></p><div class="modal-footer"><button id="cancelarBtn" class="btn">Cancelar</button><button id="confirmarBtn" class="btn btn-danger">Confirmar</button></div></div></div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api-netlify.js"></script>
+  <script>
+    let currentUser = null;
+    let estudantes = [];
+    let peis = [];
+    let professores = [];
+
+    function verificarAuth() {
+      const user = localStorage.getItem('user');
+      if (!user) { window.location.href = 'login.html'; return null; }
+      const userObj = JSON.parse(user);
+      if (userObj.perfil !== 'gestor' && userObj.perfil !== 'adm') { window.location.href = 'login.html'; return null; }
+      document.getElementById('userNome').textContent = userObj.nome;
+      return userObj;
+    }
+
+    async function carregarDados() {
+      mostrarLoading(true);
+      try {
+        estudantes = await listarEstudantes();
+        peis = await listarPEIs();
+        const users = await listar('users');
+        professores = users.filter(u => u.perfil === 'professor' && u.activityStatus === 'true');
+        
+        document.getElementById('totalEstudantes').textContent = estudantes.length;
+        document.getElementById('totalPEIs').textContent = peis.length;
+        document.getElementById('totalProfessores').textContent = professores.length;
+        
+        popularFiltros();
+        renderizarEstudantes();
+        renderizarPEIs();
+      } catch (error) { console.error(error); }
+      finally { mostrarLoading(false); }
+    }
+
+    function popularFiltros() {
+      const anos = [...new Set(estudantes.map(e => e.anoEscolar).filter(a => a))];
+      const selectAno = document.getElementById('filtroAno');
+      selectAno.innerHTML = '<option value="">Todos os anos</option>' + anos.map(a => `<option value="${a}">${a}</option>`).join('');
+    }
+
+    function renderizarEstudantes() {
+      const nome = document.getElementById('filtroNome')?.value.toLowerCase() || '';
+      const ano = document.getElementById('filtroAno')?.value || '';
+      const turno = document.getElementById('filtroTurno')?.value || '';
+      
+      let filtrados = estudantes.filter(e => 
+        (!nome || e.nome?.toLowerCase().includes(nome)) &&
+        (!ano || e.anoEscolar === ano) &&
+        (!turno || e.turno === turno)
+      );
+      
+      const tbody = document.getElementById('listaEstudantes');
+      tbody.innerHTML = filtrados.map(e => {
+        const peisEstudante = peis.filter(p => p.estudanteId == e.id);
+        return `<tr>
+          <td>${e.matricula || '-'}</td>
+          <td><strong>${escapeHtml(e.nome)}</strong></td>
+          <td>${e.anoEscolar || '-'}</td>
+          <td>${e.turno || '-'}</td>
+          <td>${e.deficiencia || '-'}</td>
+          <td>${e.CID || '-'}</td>
+          <td><span class="badge">${peisEstudante.length} PEI(s)</span></td>
+          <td class="acoes"><button class="btn btn-sm btn-warning" onclick="verPEIs(${e.id})">👁️ Ver PEIs</button></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderizarPEIs() {
+      const filtro = document.getElementById('filtroPEI')?.value.toLowerCase() || '';
+      const estudantesMap = Object.fromEntries(estudantes.map(e => [e.id, e.nome]));
+      const professoresMap = Object.fromEntries(professores.map(p => [p.id, p.nome]));
+      
+      let filtrados = peis.filter(p => 
+        !filtro || (estudantesMap[p.estudanteId]?.toLowerCase().includes(filtro) ||
+        (professoresMap[p.professorId] || '').toLowerCase().includes(filtro))
+      );
+      
+      const tbody = document.getElementById('listaPEIs');
+      tbody.innerHTML = filtrados.map(p => `
+        <tr>
+          <td><strong>${escapeHtml(estudantesMap[p.estudanteId] || 'N/A')}</strong></td>
+          <td><span class="badge-professor">${escapeHtml(professoresMap[p.professorId] || 'Professor')}</span></td>
+          <td>${formatarData(p.dataCriacao)}</td>
+          <td>${escapeHtml(p.objetivosGerais?.substring(0, 60) || '')}...</td>
+          <td class="acoes"><button class="btn btn-sm btn-warning" onclick="verPEI(${p.id}, ${p.estudanteId})">👁️ Visualizar</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function verPEIs(estudanteId) { window.location.href = `visualizar-pei.html?estudanteId=${estudanteId}`; }
+    function verPEI(peiId, estudanteId) { window.location.href = `visualizar-pei.html?peiId=${peiId}&estudanteId=${estudanteId}`; }
+
+    document.getElementById('btnNovoEstudante').onclick = () => window.location.href = 'estudante.html';
+    document.getElementById('btnLogout').onclick = () => { localStorage.removeItem('user'); window.location.href = 'login.html'; };
+    document.getElementById('filtroNome')?.addEventListener('input', () => renderizarEstudantes());
+    document.getElementById('filtroAno')?.addEventListener('change', () => renderizarEstudantes());
+    document.getElementById('filtroTurno')?.addEventListener('change', () => renderizarEstudantes());
+    document.getElementById('filtroPEI')?.addEventListener('input', () => renderizarPEIs());
+
+    currentUser = verificarAuth();
+    if (currentUser) carregarDados();
+  </script>
+</body>
+</html>
