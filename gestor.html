@@ -39,8 +39,15 @@
       color: var(--gray-600);
     }
     .badge-professor {
-      background: var(--secondary-light);
-      color: var(--secondary-dark);
+      background: #e9f5ef;
+      color: #2d6a4f;
+      padding: 0.25rem 0.5rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+    }
+    .badge-pei {
+      background: var(--primary-light);
+      color: var(--primary-dark);
       padding: 0.25rem 0.5rem;
       border-radius: 20px;
       font-size: 0.75rem;
@@ -59,7 +66,6 @@
   </nav>
 
   <div class="container">
-    <!-- Cards de estatísticas -->
     <div class="stats-cards">
       <div class="stat-card"><div class="stat-number" id="totalEstudantes">0</div><div class="stat-label">Total de Estudantes</div></div>
       <div class="stat-card"><div class="stat-number" id="totalPEIs">0</div><div class="stat-label">PEIs Criados</div></div>
@@ -88,7 +94,7 @@
 
     <div class="card">
       <div class="card-header"><h2>📋 Planos Educacionais Individualizados</h2></div>
-      <div class="filters-row"><div class="filter-group"><input type="text" id="filtroPEI" placeholder="🔍 Buscar por estudante ou professor..."></div></div>
+      <div class="filters-row"><div class="filter-group"><input type="text" id="filtroPEI" placeholder="🔍 Buscar por estudante..."></div></div>
       <div class="table-responsive">
         <table>
           <thead><tr><th>Estudante</th><th>Professor</th><th>Data</th><th>Objetivos</th><th>Ações</th></tr></thead>
@@ -104,6 +110,24 @@
   <script src="js/config.js"></script>
   <script src="js/api-netlify.js"></script>
   <script>
+    function escapeHtml(texto) {
+      if (!texto) return '';
+      const div = document.createElement('div');
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+    
+    function formatarData(dataStr) {
+      if (!dataStr) return '';
+      const data = new Date(dataStr);
+      if (isNaN(data.getTime())) return dataStr;
+      return data.toLocaleDateString('pt-BR');
+    }
+    
+    function fecharModal() {
+      document.getElementById('modalConfirmacao').classList.remove('active');
+    }
+    
     let currentUser = null;
     let estudantes = [];
     let peis = [];
@@ -123,7 +147,7 @@
       try {
         estudantes = await listarEstudantes();
         peis = await listarPEIs();
-        const users = await listar('users');
+        const users = await listarUsers();
         professores = users.filter(u => u.perfil === 'professor' && u.activityStatus === 'true');
         
         document.getElementById('totalEstudantes').textContent = estudantes.length;
@@ -155,19 +179,20 @@
       );
       
       const tbody = document.getElementById('listaEstudantes');
-      tbody.innerHTML = filtrados.map(e => {
-        const peisEstudante = peis.filter(p => p.estudanteId == e.id);
-        return `<tr>
-          <td>${e.matricula || '-'}</td>
+      const peisEstudante = peis.reduce((acc, p) => { acc[p.estudanteId] = (acc[p.estudanteId] || 0) + 1; return acc; }, {});
+      
+      tbody.innerHTML = filtrados.map(e => `
+        <tr>
+          <td>${escapeHtml(e.matricula || '-')}</td>
           <td><strong>${escapeHtml(e.nome)}</strong></td>
-          <td>${e.anoEscolar || '-'}</td>
-          <td>${e.turno || '-'}</td>
-          <td>${e.deficiencia || '-'}</td>
-          <td>${e.CID || '-'}</td>
-          <td><span class="badge">${peisEstudante.length} PEI(s)</span></td>
+          <td>${escapeHtml(e.anoEscolar || '-')}</td>
+          <td>${escapeHtml(e.turno || '-')}</td>
+          <td>${escapeHtml(e.deficiencia || '-')}</td>
+          <td>${escapeHtml(e.CID || '-')}</td>
+          <td><span class="badge-pei">${peisEstudante[e.id] || 0} PEI(s)</span></td>
           <td class="acoes"><button class="btn btn-sm btn-warning" onclick="verPEIs(${e.id})">👁️ Ver PEIs</button></td>
-        </tr>`;
-      }).join('');
+        </tr>
+      `).join('');
     }
 
     function renderizarPEIs() {
@@ -176,8 +201,7 @@
       const professoresMap = Object.fromEntries(professores.map(p => [p.id, p.nome]));
       
       let filtrados = peis.filter(p => 
-        !filtro || (estudantesMap[p.estudanteId]?.toLowerCase().includes(filtro) ||
-        (professoresMap[p.professorId] || '').toLowerCase().includes(filtro))
+        !filtro || (estudantesMap[p.estudanteId]?.toLowerCase().includes(filtro))
       );
       
       const tbody = document.getElementById('listaPEIs');
