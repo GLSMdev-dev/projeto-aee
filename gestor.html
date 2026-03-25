@@ -86,7 +86,18 @@
 
       <div class="table-responsive">
         <table>
-          <thead><tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>PEIs</th><th>Ações</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Matrícula</th>
+              <th>Nome</th>
+              <th>Ano</th>
+              <th>Turno</th>
+              <th>Deficiência</th>
+              <th>CID</th>
+              <th>PEIs</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
           <tbody id="listaEstudantes"></tbody>
         </table>
       </div>
@@ -97,7 +108,15 @@
       <div class="filters-row"><div class="filter-group"><input type="text" id="filtroPEI" placeholder="🔍 Buscar por estudante..."></div></div>
       <div class="table-responsive">
         <table>
-          <thead><tr><th>Estudante</th><th>Professor</th><th>Data</th><th>Objetivos</th><th>Ações</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Estudante</th>
+              <th>Professor</th>
+              <th>Data</th>
+              <th>Objetivos</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
           <tbody id="listaPEIs"></tbody>
         </table>
       </div>
@@ -110,6 +129,9 @@
   <script src="js/config.js"></script>
   <script src="js/api-netlify.js"></script>
   <script>
+    // ============================================
+    // FUNÇÕES AUXILIARES
+    // ============================================
     function escapeHtml(texto) {
       if (!texto) return '';
       const div = document.createElement('div');
@@ -128,20 +150,32 @@
       document.getElementById('modalConfirmacao').classList.remove('active');
     }
     
+    // ============================================
+    // VARIÁVEIS GLOBAIS
+    // ============================================
     let currentUser = null;
     let estudantes = [];
     let peis = [];
     let professores = [];
 
+    // ============================================
+    // AUTENTICAÇÃO
+    // ============================================
     function verificarAuth() {
       const user = localStorage.getItem('user');
       if (!user) { window.location.href = 'login.html'; return null; }
       const userObj = JSON.parse(user);
-      if (userObj.perfil !== 'gestor' && userObj.perfil !== 'adm') { window.location.href = 'login.html'; return null; }
+      if (userObj.perfil !== 'gestor' && userObj.perfil !== 'adm') { 
+        window.location.href = 'login.html'; 
+        return null; 
+      }
       document.getElementById('userNome').textContent = userObj.nome;
       return userObj;
     }
 
+    // ============================================
+    // CARREGAR DADOS
+    // ============================================
     async function carregarDados() {
       mostrarLoading(true);
       try {
@@ -157,16 +191,25 @@
         popularFiltros();
         renderizarEstudantes();
         renderizarPEIs();
-      } catch (error) { console.error(error); }
-      finally { mostrarLoading(false); }
+      } catch (error) { 
+        console.error(error); 
+      } finally { 
+        mostrarLoading(false); 
+      }
     }
 
+    // ============================================
+    // FILTROS
+    // ============================================
     function popularFiltros() {
       const anos = [...new Set(estudantes.map(e => e.anoEscolar).filter(a => a))];
       const selectAno = document.getElementById('filtroAno');
       selectAno.innerHTML = '<option value="">Todos os anos</option>' + anos.map(a => `<option value="${a}">${a}</option>`).join('');
     }
 
+    // ============================================
+    // RENDERIZAR ESTUDANTES
+    // ============================================
     function renderizarEstudantes() {
       const nome = document.getElementById('filtroNome')?.value.toLowerCase() || '';
       const ano = document.getElementById('filtroAno')?.value || '';
@@ -179,7 +222,10 @@
       );
       
       const tbody = document.getElementById('listaEstudantes');
-      const peisEstudante = peis.reduce((acc, p) => { acc[p.estudanteId] = (acc[p.estudanteId] || 0) + 1; return acc; }, {});
+      const peisPorEstudante = peis.reduce((acc, p) => { 
+        acc[p.estudanteId] = (acc[p.estudanteId] || 0) + 1; 
+        return acc; 
+      }, {});
       
       tbody.innerHTML = filtrados.map(e => `
         <tr>
@@ -189,12 +235,18 @@
           <td>${escapeHtml(e.turno || '-')}</td>
           <td>${escapeHtml(e.deficiencia || '-')}</td>
           <td>${escapeHtml(e.CID || '-')}</td>
-          <td><span class="badge-pei">${peisEstudante[e.id] || 0} PEI(s)</span></td>
-          <td class="acoes"><button class="btn btn-sm btn-warning" onclick="verPEIs(${e.id})">👁️ Ver PEIs</button></td>
+          <td><span class="badge-pei">${peisPorEstudante[e.id] || 0} PEI(s)</span></td>
+          <td class="acoes">
+            <button class="btn btn-sm btn-secondary" onclick="editarEstudante(${e.id})">✏️ Editar</button>
+            <button class="btn btn-sm btn-warning" onclick="verPEIs(${e.id})">👁️ Ver PEIs</button>
+          </td>
         </tr>
       `).join('');
     }
 
+    // ============================================
+    // RENDERIZAR PEIs
+    // ============================================
     function renderizarPEIs() {
       const filtro = document.getElementById('filtroPEI')?.value.toLowerCase() || '';
       const estudantesMap = Object.fromEntries(estudantes.map(e => [e.id, e.nome]));
@@ -211,21 +263,43 @@
           <td><span class="badge-professor">${escapeHtml(professoresMap[p.professorId] || 'Professor')}</span></td>
           <td>${formatarData(p.dataCriacao)}</td>
           <td>${escapeHtml(p.objetivosGerais?.substring(0, 60) || '')}...</td>
-          <td class="acoes"><button class="btn btn-sm btn-warning" onclick="verPEI(${p.id}, ${p.estudanteId})">👁️ Visualizar</button></td>
+          <td class="acoes">
+            <button class="btn btn-sm btn-warning" onclick="verPEI(${p.id}, ${p.estudanteId})">👁️ Visualizar</button>
+          </td>
         </tr>
       `).join('');
     }
 
-    function verPEIs(estudanteId) { window.location.href = `visualizar-pei.html?estudanteId=${estudanteId}`; }
-    function verPEI(peiId, estudanteId) { window.location.href = `visualizar-pei.html?peiId=${peiId}&estudanteId=${estudanteId}`; }
+    // ============================================
+    // AÇÕES
+    // ============================================
+    function editarEstudante(id) { 
+      window.location.href = `estudante.html?id=${id}`; 
+    }
+    
+    function verPEIs(estudanteId) { 
+      window.location.href = `visualizar-pei.html?estudanteId=${estudanteId}`; 
+    }
+    
+    function verPEI(peiId, estudanteId) { 
+      window.location.href = `visualizar-pei.html?peiId=${peiId}&estudanteId=${estudanteId}`; 
+    }
 
+    // ============================================
+    // EVENTOS E INICIALIZAÇÃO
+    // ============================================
     document.getElementById('btnNovoEstudante').onclick = () => window.location.href = 'estudante.html';
-    document.getElementById('btnLogout').onclick = () => { localStorage.removeItem('user'); window.location.href = 'login.html'; };
+    document.getElementById('btnLogout').onclick = () => { 
+      localStorage.removeItem('user'); 
+      window.location.href = 'login.html'; 
+    };
+    
     document.getElementById('filtroNome')?.addEventListener('input', () => renderizarEstudantes());
     document.getElementById('filtroAno')?.addEventListener('change', () => renderizarEstudantes());
     document.getElementById('filtroTurno')?.addEventListener('change', () => renderizarEstudantes());
     document.getElementById('filtroPEI')?.addEventListener('input', () => renderizarPEIs());
 
+    // Inicialização
     currentUser = verificarAuth();
     if (currentUser) carregarDados();
   </script>
