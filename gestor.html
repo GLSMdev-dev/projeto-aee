@@ -78,8 +78,8 @@
     function renderizarPEIs(){const t=document.getElementById('filtroPEI')?.value.toLowerCase()||'',e=document.getElementById('filtroDataInicio')?.value||'',n=document.getElementById('filtroDataFim')?.value||'',o=document.getElementById('filtroStatus')?.value||'todos';const a=Object.fromEntries(estudantes.map(t=>[t.id,t.nome])),r=Object.fromEntries(professores.map(t=>[t.id,t.nome]));let l=peis.filter(p=>!t||(a[p.estudanteId]||'').toLowerCase().includes(t));if(e||n){l=l.filter(p=>{if(!p.dataCriacao)return!1;const t=p.dataCriacao.split(' ')[0].split('/').reverse().join('-');return(!e||t>=e)&&(!n||t<=n)})}if('todos'!==o){l=l.filter(p=>p.status===o)}document.getElementById('listaPEIs').innerHTML=l.map(p=>{let s='';s='ativo'===p.status?'status-ativo':'rascunho'===p.status?'status-rascunho':'status-arquivado';return`<tr><td><strong>${escapeHtml(a[p.estudanteId]||'N/A')}</strong></td><td><span class="badge-professor">${escapeHtml(r[p.professorId]||'Professor')}</span></td><td>${p.dataCriacao?p.dataCriacao.split(' ')[0]:'-'}</td><td><span class="badge-status ${s}">${p.status||'ativo'}</span></td><td>${escapeHtml(p.objetivosGerais?.substring(0,50)||'')}...</td><td class="acoes"><button class="btn btn-sm btn-warning" onclick="verPEI(${p.id},${p.estudanteId})">👁️ Ver</button></td></tr>`}).join('')}
     
     function editarEstudante(t){window.location.href=`estudante.html?id=${t}`}
-    function verPEIs(t){window.location.href=`visualizar-pei.html?estudanteId=${t}`}
-    function verPEI(t,e){window.location.href=`visualizar-pei.html?peiId=${t}&estudanteId=${e}`}
+    function verPEIs(t){if(!t){console.error('estudanteId inválido');return}window.location.href=`visualizar-pei.html?estudanteId=${t}`}
+    function verPEI(t,e){if(!e){console.error('estudanteId inválido');return}window.location.href=`visualizar-pei.html?peiId=${t}&estudanteId=${e}`}
     
     document.getElementById('btnNovoEstudante').onclick=()=>window.location.href='estudante.html'
     document.getElementById('btnLogout').onclick=()=>{localStorage.removeItem('user'),window.location.href='login.html'}
