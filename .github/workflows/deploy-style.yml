@@ -1,0 +1,53 @@
+name: Deploy Style to GitHub Pages
+
+on:
+  push:
+    branches:
+      - develop/interface-style
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Create config.js from template
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          DEPLOYMENT_ID: ${{ secrets.DEPLOYMENT_ID }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          API_KEY: ${{ secrets.API_KEY }}
+          PUBLIC_URL: ${{ secrets.PUBLIC_URL }}
+        run: |
+          echo "🔧 Gerando config.js..."
+          cat js/config-template.js | \
+            sed "s|{{API_URL}}|${API_URL}|g" | \
+            sed "s|{{DEPLOYMENT_ID}}|${DEPLOYMENT_ID}|g" | \
+            sed "s|{{SPREADSHEET_ID}}|${SPREADSHEET_ID}|g" | \
+            sed "s|{{API_KEY}}|${API_KEY}|g" | \
+            sed "s|{{PUBLIC_URL}}|${PUBLIC_URL}|g" \
+            > js/config.js
+          echo "✅ config.js gerado"
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
