@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema AEE - Login</title>
+  <title>PSAEE - Login</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .login-container {
@@ -24,11 +24,16 @@
     .login-card h2 {
       text-align: center;
       color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+    .login-card .subtitle {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--gray-600);
       margin-bottom: 1.5rem;
     }
     .login-card .logo {
       text-align: center;
-      font-size: 3rem;
       margin-bottom: 1rem;
     }
     .btn-login {
@@ -44,14 +49,15 @@
   </style>
 </head>
 <body>
-  <div id="loading" class="loading">
-    <div class="spinner"></div>
-  </div>
+  <div id="loading" class="loading"><div class="spinner"></div></div>
 
   <div class="login-container">
     <div class="login-card">
-      <div class="logo">   <img src="assets/logo-sangage.png" alt="Sangage" style="height: 80px; width: auto;"> </div>
-      <h2>Sistema AEE - PEI</h2>
+      <div class="logo">
+        <img src="assets/logo-sage.png" alt="Sage" style="height: 120px; width: auto;">
+      </div>
+      <h2>Sistema - PSAEE</h2>
+      <div class="subtitle">Planejamento Semanal do Atendimento Educacional Especializado</div>
       <form id="loginForm">
         <div class="form-group">
           <label for="username">Usuário</label>
@@ -71,25 +77,16 @@
   <script src="js/config.js"></script>
   <script src="js/api-netlify.js"></script>
   <script>
-    // Função de login
     async function fazerLogin(username, senha) {
       const url = `${API_URL}?action=login&_data=${encodeURIComponent(JSON.stringify({ username, senha }))}&_=${Date.now()}`;
-      
       try {
         const response = await fetch(url);
         const resultado = await response.json();
-        
         if (resultado.sucesso) {
-          // Salvar dados do usuário
           localStorage.setItem('user', JSON.stringify(resultado.user));
-          // Redirecionar conforme perfil
-          if (resultado.user.perfil === 'adm') {
-            window.location.href = 'admin.html';
-          } else if (resultado.user.perfil === 'gestor') {
-            window.location.href = 'gestor.html';
-          } else {
-            window.location.href = 'index.html';
-          }
+          if (resultado.user.perfil === 'adm') window.location.href = 'admin.html';
+          else if (resultado.user.perfil === 'gestor') window.location.href = 'gestor.html';
+          else window.location.href = 'index.html';
         } else {
           const errorDiv = document.getElementById('errorMessage');
           errorDiv.textContent = resultado.erro || 'Usuário ou senha inválidos';
@@ -103,7 +100,6 @@
       }
     }
 
-    // Evento do formulário
     document.getElementById('loginForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const username = document.getElementById('username').value;
@@ -111,7 +107,6 @@
       fazerLogin(username, senha);
     });
 
-    // Verificar se já está logado
     const userLogado = localStorage.getItem('user');
     if (userLogado) {
       const user = JSON.parse(userLogado);
