@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Sistema AEE - Professor</title>
+  <title>PSAEE - Professor</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .filters-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
     .filter-group { flex: 1; min-width: 150px; }
-    .badge-pei { background: var(--primary-light); color: var(--primary-dark); padding: 0.25rem 0.5rem; border-radius: 20px; font-size: 0.75rem; }
-    .historico-pei { background: var(--gray-50); padding: 0.5rem; border-radius: var(--radius-sm); margin-top: 0.5rem; font-size: 0.75rem; }
+    .badge-psaee { background: var(--primary-light); color: var(--primary-dark); padding: 0.25rem 0.5rem; border-radius: 20px; font-size: 0.75rem; }
+    .historico-psaee { background: var(--gray-50); padding: 0.5rem; border-radius: var(--radius-sm); margin-top: 0.5rem; font-size: 0.75rem; }
   </style>
 </head>
 <body>
@@ -24,8 +24,17 @@
   </div>
   
   <nav class="navbar">
-    <h1>🏫 Sistema AEE - Professor</h1>
-    <div class="nav-links"><span style="color: white;">👤 <span id="userNome"></span></span><button id="btnLogout" class="btn btn-sm">Sair</button></div>
+    <div>
+      <h1>🏫 Sistema - PSAEE</h1>
+      <p style="font-size: 0.75rem; margin-top: 0.25rem; opacity: 0.9;">Planejamento Semanal do Atendimento Educacional Especializado</p>
+    </div>
+    <div class="nav-links">
+      <span style="color: white; display: flex; align-items: center; gap: 0.5rem;">
+        <img src="assets/nacinzo.png" alt="Ícone" style="height: 24px; width: auto; border-radius: 50%;">
+        <span id="userNome"></span>
+      </span>
+      <button id="btnLogout" class="btn btn-sm">Sair</button>
+    </div>
   </nav>
   
   <div class="container">
@@ -39,13 +48,14 @@
       </div>
       
       <div class="table-responsive">
-          <table>
+        <table>
           <thead>
-                <tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>PEIs</th><th>Ações</th></tr>
+            <tr>
+              <th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>PSAEEs</th><th>Ações</th>
+            </tr>
           </thead>
-          <tbody id="listaEstudantes"><tr><td colspan="8" class="text-center">Carregando...</td></tr>
-          </tbody>
-          </table>
+          <tbody id="listaEstudantes"><tr><td colspan="8" class="text-center">Carregando...</td></tr></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -66,11 +76,11 @@
     
     function popularFiltros(){const e=[...new Set(estudantesCache.map(e=>e.anoEscolar).filter(e=>e))];document.getElementById('filtroAno').innerHTML='<option value="">Todos os anos</option>'+e.map(e=>`<option value="${e}">${e}</option>`).join('')}
     
-    function renderizarEstudantes(e){const t=document.getElementById('listaEstudantes');if(!e||0===e.length){t.innerHTML='<tr><td colspan="8" class="text-center">📭 Nenhum estudante cadastrado</td></tr>';return}const n=peisCache.reduce((e,t)=>(e[t.estudanteId]=(e[t.estudanteId]||0)+1,e),{});t.innerHTML=e.map(e=>{const t=peisCache.filter(t=>t.estudanteId==e.id).map(e=>e.dataCriacao?.split(' ')[0]||'sem data').join(', ');console.log('Renderizando estudante:', e.id, e.nome);return`<tr><td>${escapeHtml(e.matricula||'-')}</td><td><strong>${escapeHtml(e.nome)}</strong><div class="historico-pei">📅 ${t||'Nenhum PEI'}</div></td><td>${escapeHtml(e.anoEscolar||'-')}</td><td>${escapeHtml(e.turno)}</td><td>${escapeHtml(e.deficiencia)}</td><td>${escapeHtml(e.CID||'-')}</td><td><span class="badge-pei">${n[e.id]||0} PEI(s)</span></td><td class="acoes"><button class="btn btn-sm btn-primary" onclick="criarPEI(${e.id})">📄 Novo PEI</button><button class="btn btn-sm btn-warning" onclick="visualizarPEI(${e.id})">👁️ Ver PEIs</button></td></tr>`}).join('')}
+    function renderizarEstudantes(e){const t=document.getElementById('listaEstudantes');if(!e||0===e.length){t.innerHTML='<tr><td colspan="8" class="text-center">📭 Nenhum estudante cadastrado</td></tr>';return}const n=peisCache.reduce((e,t)=>(e[t.estudanteId]=(e[t.estudanteId]||0)+1,e),{});t.innerHTML=e.map(e=>{const t=peisCache.filter(t=>t.estudanteId==e.id).map(e=>e.dataCriacao?.split(' ')[0]||'sem data').join(', ');console.log('Renderizando estudante:', e.id, e.nome);return`<tr><td>${escapeHtml(e.matricula||'-')}</td><td><strong>${escapeHtml(e.nome)}</strong><div class="historico-psaee">📅 ${t||'Nenhum PSAEE'}</div></td><td>${escapeHtml(e.anoEscolar||'-')}</td><td>${escapeHtml(e.turno)}</td><td>${escapeHtml(e.deficiencia)}</td><td>${escapeHtml(e.CID||'-')}</td><td><span class="badge-psaee">${n[e.id]||0} PSAEE(s)</span></td><td class="acoes"><button class="btn btn-sm btn-primary" onclick="criarPEI(${e.id})">📄 Novo PSAEE</button><button class="btn btn-sm btn-warning" onclick="visualizarPEI(${e.id})">👁️ Ver PSAEEs</button></td></tr>`}).join('')}
     
     function aplicarFiltros(){const e=document.getElementById('filtroNome')?.value.toLowerCase()||'',t=document.getElementById('filtroAno')?.value||'',n=document.getElementById('filtroTurno')?.value||'';let o=[...estudantesCache];e&&(o=o.filter(t=>t.nome?.toLowerCase().includes(e))),t&&(o=o.filter(e=>e.anoEscolar===t)),n&&(o=o.filter(e=>e.turno===n)),renderizarEstudantes(o)}
     
-    function criarPEI(e){console.log('criarPEI chamado com ID:', e, 'tipo:', typeof e);if(!e || e === undefined || e === null || e === 'undefined'){console.error('estudanteId inválido');mostrarMensagem('Erro: ID do estudante não encontrado','error');return}window.location.href=`pei.html?estudanteId=${e}`}
+    function criarPEI(e){console.log('criarPEI chamado com ID:', e);if(!e||e===undefined){console.error('estudanteId inválido');return}window.location.href=`pei.html?estudanteId=${e}`}
     function visualizarPEI(e){console.log('visualizarPEI chamado com ID:', e);if(!e||e===undefined){console.error('estudanteId inválido');return}window.location.href=`visualizar-pei.html?estudanteId=${e}`}
     
     document.getElementById('btnLogout').onclick=()=>{localStorage.removeItem('user'),window.location.href='login.html'}
