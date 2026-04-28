@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSAEE - Gestor</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .filters-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: flex-end; }
+    .filter-group { flex: 1; min-width: 150px; }
+    .filter-group label { display: block; font-size: 0.75rem; margin-bottom: 0.25rem; color: var(--gray-600); }
+    .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--white); border-radius: var(--radius); padding: 1rem; text-align: center; box-shadow: var(--shadow); }
+    .stat-number { font-size: 2rem; font-weight: bold; color: var(--primary); }
+    .stat-label { font-size: 0.875rem; color: var(--gray-600); }
+    .badge-professor { background: #e9f5ef; color: #2d6a4f; padding: 0.25rem 0.5rem; border-radius: 20px; font-size: 0.75rem; }
+    .badge-psaee { background: var(--primary-light); color: var(--primary-dark); padding: 0.25rem 0.5rem; border-radius: 20px; font-size: 0.75rem; }
+    .badge-status { padding: 0.25rem 0.5rem; border-radius: 20px; font-size: 0.7rem; }
+    .status-ativo { background: #d4edda; color: #155724; }
+    .status-rascunho { background: #fff3cd; color: #856404; }
+    .status-arquivado { background: #e2e3e5; color: #383d41; }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading"><div class="spinner"></div></div>
+  
+  <nav class="navbar">
+    <div>
+      <h1>🏫 Sistema - PSAEE</h1>
+      <p style="font-size: 0.75rem; margin-top: 0.25rem; opacity: 0.9;">Planejamento Semanal do Atendimento Educacional Especializado - Gestor</p>
+    </div>
+    <div class="nav-links">
+      <span style="color:white; display: flex; align-items: center; gap: 0.5rem;">
+        <img src="assets/nacinzo.png" alt="Ícone" style="height: 24px; width: auto; border-radius: 50%;">
+        <span id="userNome"></span>
+      </span>
+      <button id="btnLogout" class="btn btn-sm">Sair</button>
+    </div>
+  </nav>
+  
+  <div class="container">
+    <div class="stats-cards">
+      <div class="stat-card"><div class="stat-number" id="totalEstudantes">0</div><div class="stat-label">Total de Estudantes</div></div>
+      <div class="stat-card"><div class="stat-number" id="totalPSAEEs">0</div><div class="stat-label">PSAEEs Criados</div></div>
+      <div class="stat-card"><div class="stat-number" id="totalProfessores">0</div><div class="stat-label">Professores Ativos</div></div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header"><h2>📚 Estudantes Cadastrados</h2><button id="btnNovoEstudante" class="btn btn-primary">➕ Novo Estudante</button></div>
+      <div class="filters-row">
+        <div class="filter-group"><input type="text" id="filtroNome" placeholder="🔍 Buscar por nome..."></div>
+        <div class="filter-group"><select id="filtroAno"><option value="">Todos os anos</option></select></div>
+        <div class="filter-group"><select id="filtroTurno"><option value="">Todos os turnos</option><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Noite">Noite</option><option value="Integral">Integral</option></select></div>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead><tr><th>Matrícula</th><th>Nome</th><th>Ano</th><th>Turno</th><th>Deficiência</th><th>CID</th><th>PSAEEs</th><th>Ações</th></tr></thead>
+          <tbody id="listaEstudantes"></tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header"><h2>📋 Planejamentos Semanais (PSAEE)</h2></div>
+      <div class="filters-row">
+        <div class="filter-group"><input type="text" id="filtroPSAEE" placeholder="🔍 Buscar por estudante..."></div>
+        <div class="filter-group"><label>Data Início</label><input type="date" id="filtroDataInicio"></div>
+        <div class="filter-group"><label>Data Fim</label><input type="date" id="filtroDataFim"></div>
+        <div class="filter-group"><label>Status</label><select id="filtroStatus"><option value="todos">Todos</option><option value="ativo">Ativos</option><option value="rascunho">Rascunhos</option><option value="arquivado">Arquivados</option></select></div>
+        <div class="filter-group"><button id="btnFiltrarPSAEE" class="btn btn-secondary">🔍 Filtrar</button></div>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead><tr><th>Estudante</th><th>Professor</th><th>Data</th><th>Status</th><th>Objetivos</th><th>Ações</th></tr></thead>
+          <tbody id="listaPSAEEs"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <div id="modalConfirmacao" class="modal"><div class="modal-content"><div class="modal-header"><h3>Confirmar</h3><button class="btn btn-sm" onclick="fecharModal()">✕</button></div><p id="confirmacaoMensagem"></p><div class="modal-footer"><button id="cancelarBtn" class="btn">Cancelar</button><button id="confirmarBtn" class="btn btn-danger">Confirmar</button></div></div></div>
+  
+  <script src="js/utils.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api-netlify.js"></script>
+  <script>
+    function escapeHtml(t){if(!t)return'';const e=document.createElement('div');return e.textContent=t,e.innerHTML}
+    function formatarData(t){if(!t)return'';const e=new Date(t);return isNaN(e.getTime())?t:e.toLocaleDateString('pt-BR')}
+    function fecharModal(){document.getElementById('modalConfirmacao').classList.remove('active')}
+    
+    let currentUser=null,estudantes=[],peis=[],professores=[];
+    
+    function verificarAuth(){const t=localStorage.getItem('user');if(!t){window.location.href='login.html';return null}const e=JSON.parse(t);if('gestor'!==e.perfil&&'adm'!==e.perfil){window.location.href='login.html';return null}document.getElementById('userNome').textContent=e.nome;return e}
+    
+    async function carregarDados(){mostrarLoading(true);try{estudantes=await listarEstudantes();peis=await listarPEIs();const t=await listarUsers();professores=t.filter(t=>'professor'===t.perfil&&'true'===t.activityStatus);document.getElementById('totalEstudantes').textContent=estudantes.length;document.getElementById('totalPSAEEs').textContent=peis.length;document.getElementById('totalProfessores').textContent=professores.length;popularFiltros();renderizarEstudantes();renderizarPSAEEs()}catch(t){console.error(t)}finally{mostrarLoading(false)}}
+    
+    function popularFiltros(){const t=[...new Set(estudantes.map(t=>t.anoEscolar).filter(t=>t))];document.getElementById('filtroAno').innerHTML='<option value="">Todos os anos</option>'+t.map(t=>`<option value="${t}">${t}</option>`).join('')}
+    
+    function renderizarEstudantes(){const t=document.getElementById('filtroNome')?.value.toLowerCase()||'',e=document.getElementById('filtroAno')?.value||'',n=document.getElementById('filtroTurno')?.value||'';let o=estudantes.filter(r=>(!t||r.nome?.toLowerCase().includes(t))&&(!e||r.anoEscolar===e)&&(!n||r.turno===n));const a=peis.reduce((t,e)=>(t[e.estudanteId]=(t[e.estudanteId]||0)+1,t),{});document.getElementById('listaEstudantes').innerHTML=o.map(t=>`<tr><td>${escapeHtml(t.matricula||'-')}</td><td><strong>${escapeHtml(t.nome)}</strong></td><td>${escapeHtml(t.anoEscolar||'-')}</td><td>${escapeHtml(t.turno)}</td><td>${escapeHtml(t.deficiencia)}</td><td>${escapeHtml(t.CID||'-')}</td><td><span class="badge-psaee">${a[t.id]||0} PSAEE(s)</span></td><td class="acoes"><button class="btn btn-sm btn-secondary" onclick="editarEstudante(${t.id})">✏️ Editar</button><button class="btn btn-sm btn-warning" onclick="verPSAEEs(${t.id})">👁️ Ver PSAEEs</button></td></tr>`).join('')}
+    
+    function renderizarPSAEEs(){const t=document.getElementById('filtroPSAEE')?.value.toLowerCase()||'',e=document.getElementById('filtroDataInicio')?.value||'',n=document.getElementById('filtroDataFim')?.value||'',o=document.getElementById('filtroStatus')?.value||'todos';const a=Object.fromEntries(estudantes.map(t=>[t.id,t.nome])),r=Object.fromEntries(professores.map(t=>[t.id,t.nome]));let l=peis.filter(p=>!t||(a[p.estudanteId]||'').toLowerCase().includes(t));if(e||n){l=l.filter(p=>{if(!p.dataCriacao)return!1;const t=p.dataCriacao.split(' ')[0].split('/').reverse().join('-');return(!e||t>=e)&&(!n||t<=n)})}if('todos'!==o){l=l.filter(p=>p.status===o)}document.getElementById('listaPSAEEs').innerHTML=l.map(p=>{let s='';s='ativo'===p.status?'status-ativo':'rascunho'===p.status?'status-rascunho':'status-arquivado';return`<tr><td><strong>${escapeHtml(a[p.estudanteId]||'N/A')}</strong></td><td><span class="badge-professor">${escapeHtml(r[p.professorId]||'Professor')}</span></td><td>${p.dataCriacao?p.dataCriacao.split(' ')[0]:'-'}</td><td><span class="badge-status ${s}">${p.status||'ativo'}</span></td><td>${escapeHtml(p.objetivosGerais?.substring(0,50)||'')}...</td><td class="acoes"><button class="btn btn-sm btn-warning" onclick="verPSAEE(${p.id},${p.estudanteId})">👁️ Ver</button></td></tr>`}).join('')}
+    
+    function editarEstudante(t){window.location.href=`estudante.html?id=${t}`}
+    function verPSAEEs(t){if(!t){console.error('estudanteId inválido');return}window.location.href=`visualizar-pei.html?estudanteId=${t}`}
+    function verPSAEE(t,e){if(!e){console.error('estudanteId inválido');return}window.location.href=`visualizar-pei.html?peiId=${t}&estudanteId=${e}`}
+    
+    document.getElementById('btnNovoEstudante').onclick=()=>window.location.href='estudante.html'
+    document.getElementById('btnLogout').onclick=()=>{localStorage.removeItem('user'),window.location.href='login.html'}
+    document.getElementById('filtroNome')?.addEventListener('input',()=>renderizarEstudantes())
+    document.getElementById('filtroAno')?.addEventListener('change',()=>renderizarEstudantes())
+    document.getElementById('filtroTurno')?.addEventListener('change',()=>renderizarEstudantes())
+    document.getElementById('btnFiltrarPSAEE')?.addEventListener('click',()=>renderizarPSAEEs())
+    document.getElementById('filtroPSAEE')?.addEventListener('input',()=>renderizarPSAEEs())
+    
+    currentUser=verificarAuth(),currentUser&&carregarDados()
+  </script>
+</body>
+</html>

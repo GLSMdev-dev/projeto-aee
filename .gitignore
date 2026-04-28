@@ -1,0 +1,9 @@
+
+# Arquivo gerado no deploy (não commitar)
+js/config.js
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
