@@ -55,6 +55,23 @@ async function lerPlanilha(range) {
   }
 }
 
+// Função genérica para listar entidades
+async function listar(entidade) {
+  const mapeamento = {
+    'estudantes': SHEETS_CONFIG.ranges.estudantes,
+    'peis': SHEETS_CONFIG.ranges.peis,
+    'users': SHEETS_CONFIG.ranges.users
+  };
+  
+  const range = mapeamento[entidade];
+  if (!range) {
+    console.warn(`⚠️ Entidade '${entidade}' não mapeada`);
+    return [];
+  }
+  
+  return await lerPlanilha(range);
+}
+
 // ============================================
 // CRUD ESTUDANTES
 // ============================================

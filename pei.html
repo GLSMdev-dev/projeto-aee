@@ -98,8 +98,282 @@
   <script src="js/config.js"></script>
   <script src="js/api-netlify.js"></script>
   <script>
-    // [Código JavaScript permanece o mesmo, apenas os textos visuais foram alterados]
-    // O código mantém os nomes das funções originais (criarPEI, etc.) para compatibilidade
+    // ============================================
+    // SISTEMA AEE - CRIAR/EDITAR PEI (PSAEE)
+    // ============================================
+
+    // Objetivos estruturados
+    const OBJETIVOS = {
+      'Comunicação': [
+        { id: 'com1', nome: 'Aumentar a comunicação expressiva' },
+        { id: 'com2', nome: 'Desenvolver fala e linguagem' },
+        { id: 'com3', nome: 'Usar recursos alternativos de comunicação' }
+      ],
+      'Habilidades Sociais': [
+        { id: 'hs1', nome: 'Melhorar interação com pares' },
+        { id: 'hs2', nome: 'Desenvolver empatia e compreensão' },
+        { id: 'hs3', nome: 'Participar de atividades em grupo' }
+      ],
+      'Aprendizado Acadêmico': [
+        { id: 'aa1', nome: 'Melhorar leitura e escrita' },
+        { id: 'aa2', nome: 'Desenvolver raciocínio lógico' },
+        { id: 'aa3', nome: 'Aumentar compreensão em conteúdos' }
+      ],
+      'Autonomia': [
+        { id: 'aut1', nome: 'Desenvolver independência nas atividades' },
+        { id: 'aut2', nome: 'Melhorar autocuidado' },
+        { id: 'aut3', nome: 'Aumentar responsabilidade' }
+      ]
+    };
+
+    // Atividades
+    const ATIVIDADES = {
+      'Pedagógicas': ['Leitura compartilhada', 'Escrita criativa', 'Matemática aplicada', 'Projetos interdisciplinares'],
+      'Motoras': ['Jogos de coordenação', 'Atividades aquáticas', 'Dança terapêutica', 'Yoga'],
+      'Sensoriais': ['Brincadeiras sensoriais', 'Estímulo visual', 'Estímulo auditivo', 'Atividades táteis'],
+      'Sociais': ['Jogos em grupo', 'Dramatização', 'Música em grupo', 'Atividades cooperativas']
+    };
+
+    // Estratégias Pedagógicas
+    const ESTRATEGIAS = [
+      'Ensino estruturado', 'Reforço positivo', 'Aprendizagem colaborativa',
+      'Adaptação de materiais', 'Uso de tecnologia', 'Visualização de rotinas',
+      'Modelagem comportamental', 'Dramatização', 'Música e movimento'
+    ];
+
+    // Recursos de Acessibilidade
+    const RECURSOS = [
+      'Pranchas de comunicação', 'Órteses', 'Lupas', 'Softwares educativos',
+      'Leitura ampliada', 'Audiolivros', 'Teclado adaptado', 'Computador', 'Tablet'
+    ];
+
+    // Obter parâmetro da URL
+    function getUrlParameter(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    // Carregar dados do estudante
+    async function carregarDadosEstudante() {
+      const estudanteId = getUrlParameter('estudanteId');
+      const divDados = document.getElementById('dadosEstudante');
+      const inputEstudanteId = document.getElementById('estudanteId');
+
+      if (!estudanteId) {
+        divDados.innerHTML = '❌ Erro: Nenhum estudante selecionado';
+        return;
+      }
+
+      try {
+        mostrarLoading(true);
+        const estudantes = await listarEstudantes();
+        const estudante = estudantes.find(e => e.id == estudanteId);
+
+        if (!estudante) {
+          divDados.innerHTML = '❌ Estudante não encontrado';
+          return;
+        }
+
+        inputEstudanteId.value = estudante.id;
+        divDados.innerHTML = `
+          <p><strong>Nome:</strong> ${estudante.nome || 'N/A'}</p>
+          <p><strong>Matrícula:</strong> ${estudante.matricula || 'N/A'}</p>
+          <p><strong>Ano Escolar:</strong> ${estudante.anoEscolar || 'N/A'}</p>
+          <p><strong>Turno:</strong> ${estudante.turno || 'N/A'}</p>
+          <p><strong>Deficiência/Transtorno:</strong> ${estudante.deficiencia || 'N/A'}</p>
+        `;
+
+        console.log('✅ Dados do estudante carregados:', estudante);
+      } catch (error) {
+        console.error('❌ Erro ao carregar estudante:', error);
+        divDados.innerHTML = '❌ Erro ao carregar dados do estudante';
+      } finally {
+        mostrarLoading(false);
+      }
+    }
+
+    // Renderizar objetivos
+    function renderizarObjetivos() {
+      const container = document.getElementById('objetivosContainer');
+      
+      let html = '';
+      for (const [categoria, objetivos] of Object.entries(OBJETIVOS)) {
+        html += `
+          <div class="objetivo-card">
+            <div class="objetivo-header" onclick="toggleObjetivo(this)">
+              <span>${categoria}</span>
+              <span>▼</span>
+            </div>
+            <div class="objetivo-content">
+              <div class="checkbox-group-vertical">
+        `;
+        
+        objetivos.forEach(obj => {
+          html += `
+            <label>
+              <input type="checkbox" name="objetivo" value="${obj.id}">
+              ${obj.nome}
+            </label>
+          `;
+        });
+        
+        html += `
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      container.innerHTML = html;
+    }
+
+    // Toggle objetivo accordion
+    function toggleObjetivo(header) {
+      header.nextElementSibling.classList.toggle('active');
+      header.querySelector('span:last-child').style.transform = 
+        header.nextElementSibling.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0)';
+    }
+
+    // Renderizar atividades
+    function renderizarAtividades() {
+      const container = document.getElementById('atividadesContainer');
+      
+      let html = '';
+      for (const [categoria, atividades] of Object.entries(ATIVIDADES)) {
+        html += `
+          <div class="atividade-categoria">
+            <h4>${categoria}</h4>
+            <div class="atividade-lista">
+        `;
+        
+        atividades.forEach(atividade => {
+          html += `
+            <div class="badge-atividade" onclick="toggleAtividade(this)" data-atividade="${atividade}">
+              ${atividade}
+            </div>
+          `;
+        });
+        
+        html += `
+            </div>
+          </div>
+        `;
+      }
+      
+      container.innerHTML = html;
+    }
+
+    // Toggle atividade
+    function toggleAtividade(element) {
+      element.classList.toggle('selected');
+    }
+
+    // Renderizar estratégias
+    function renderizarEstrategias() {
+      const container = document.getElementById('estrategiasContainer');
+      
+      let html = ESTRATEGIAS.map(est => `
+        <label>
+          <input type="checkbox" name="estrategia" value="${est}">
+          ${est}
+        </label>
+      `).join('');
+      
+      container.innerHTML = html;
+    }
+
+    // Renderizar recursos
+    function renderizarRecursos() {
+      const container = document.getElementById('recursosContainer');
+      
+      let html = RECURSOS.map(rec => `
+        <label>
+          <input type="checkbox" name="recurso" value="${rec}">
+          ${rec}
+        </label>
+      `).join('');
+      
+      container.innerHTML = html;
+    }
+
+    // Inicializar formulário
+    async function inicializarFormulario() {
+      try {
+        await carregarDadosEstudante();
+        renderizarObjetivos();
+        renderizarAtividades();
+        renderizarEstrategias();
+        renderizarRecursos();
+      } catch (error) {
+        console.error('Erro ao inicializar:', error);
+        mostrarMensagem('Erro ao carregar formulário', 'error');
+      }
+    }
+
+    // Submeter formulário
+    document.getElementById('formPEI').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const estudanteId = document.getElementById('estudanteId').value;
+      
+      if (!estudanteId) {
+        mostrarMensagem('❌ Estudante não selecionado', 'error');
+        return;
+      }
+
+      // Coletar objetivos selecionados
+      const objetivos = Array.from(document.querySelectorAll('input[name="objetivo"]:checked'))
+        .map(cb => cb.value);
+
+      // Coletar atividades selecionadas
+      const atividades = Array.from(document.querySelectorAll('.badge-atividade.selected'))
+        .map(el => el.getAttribute('data-atividade'));
+
+      // Coletar estratégias
+      const estrategias = Array.from(document.querySelectorAll('input[name="estrategia"]:checked'))
+        .map(cb => cb.value);
+
+      // Coletar recursos
+      const recursos = Array.from(document.querySelectorAll('input[name="recurso"]:checked'))
+        .map(cb => cb.value);
+
+      // Validar se há seleções
+      if (objetivos.length === 0 || atividades.length === 0) {
+        mostrarMensagem('❌ Selecione pelo menos um objetivo e uma atividade', 'warning');
+        return;
+      }
+
+      const pei = {
+        estudanteId: estudanteId,
+        dataAtendimento: document.getElementById('dataAtendimento').value || new Date().toISOString().split('T')[0],
+        objetivos: objetivos.join(';'),
+        atividades: atividades.join(';'),
+        estrategias: estrategias.join(';'),
+        recursos: recursos.join(';'),
+        materialApoio: document.getElementById('materialApoio').value,
+        relatoAtendimento: document.getElementById('relatoAtendimento').value,
+        dataCriacao: new Date().toLocaleString('pt-BR')
+      };
+
+      try {
+        mostrarLoading(true);
+        await criarPEI(pei);
+        
+        setTimeout(() => {
+          mostrarMensagem('✅ PSAEE criado com sucesso!', 'success');
+          window.location.href = 'index.html';
+        }, 1000);
+      } catch (error) {
+        console.error('Erro ao salvar PEI:', error);
+        mostrarMensagem('❌ Erro ao salvar PSAEE', 'error');
+      } finally {
+        mostrarLoading(false);
+      }
+    });
+
+    // Inicializar ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+      inicializarFormulario();
+    });
   </script>
 </body>
 </html>
