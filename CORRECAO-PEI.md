@@ -94,14 +94,34 @@ Criado arquivo com template de configuração para:
 
 ## ⚙️ Configuração Necessária
 
-### 1. Copiar config.js para produção
+### 1. Configurar GitHub Secrets (RECOMENDADO - SEGURO)
+Em vez de preencher `config.js` manualmente, use GitHub Secrets:
+
 ```bash
-# Já criado em: js/config.js
-# IMPORTANTE: Preencher com valores reais:
-- API_URL: URL do Google Apps Script deployment
-- DEPLOYMENT_ID: ID da publicação do Apps Script
-- SHEETS_CONFIG.spreadsheetId: ID da planilha Google
-- SHEETS_CONFIG.apiKey: Google API key com acesso a Sheets
+# Não faça isso (inseguro):
+# ❌ Preencher config.js com valores sensíveis
+
+# Faça isso (seguro):
+# ✅ Configurar no GitHub Settings → Secrets → Actions
+```
+
+Veja [GITHUB-SECRETS.md](GITHUB-SECRETS.md) para instruções completas de:
+- Como acessar Settings → Secrets
+- Quais valores configurar
+- Como o workflow automático substitui placeholders
+- Troubleshooting
+
+**Resumo do Fluxo de Segurança:**
+```
+GitHub Secrets (ocultos)
+   ↓
+GitHub Actions Workflow (deploy.yml)
+   ↓
+Substitui {{placeholders}} em config-template.js
+   ↓
+Gera config.js (não commitado)
+   ↓
+Deploy para GitHub Pages
 ```
 
 ### 2. Estrutura da Planilha Google Sheets
