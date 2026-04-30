@@ -2,7 +2,12 @@
 
 ## ⚡ Início Rápido (5 minutos)
 
-### 1️⃣ Configurar GitHub Secrets
+### 1️⃣ Habilitar GitHub Pages
+1. Ir para: https://github.com/GLSMdev-dev/projeto-aee/settings/pages
+2. Em "Source", selecionar: **"GitHub Actions"**
+3. Clicar "Save"
+
+### 2️⃣ Configurar GitHub Secrets
 1. Ir para: https://github.com/GLSMdev-dev/projeto-aee/settings/secrets/actions
 2. Adicionar 5 secrets (veja [GITHUB-SECRETS.md](GITHUB-SECRETS.md) para detalhes):
    - `API_URL`
